@@ -29,7 +29,7 @@ if __name__ == '__main__':
     root = ftree.DFT_driver()
     #ftree.printTree(root)
     #print as JSON format
-    '''exporter = JsonExporter(indent=2)
-    print(exporter.export(root))'''
+    exporter = JsonExporter(indent=2)
+    print(exporter.export(root))#''''''
     #driver.close()
     
