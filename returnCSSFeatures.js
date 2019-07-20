@@ -8,18 +8,28 @@
  */
 function getCSSFeatures(e){
   var eStyle = window.getComputedStyle(e, 'null');
+  //color
   var color = eStyle.color.match(/\d+(\.\d+)?/g).map(Number);
   if(color.length == 3){
     color.push(1);//convert to rgba format
   }
-  console.log(color);
-  return {color:color};
+  //text-align
+  var textAlign = [], tmp = eStyle.textAlign;
+  switch(tmp){
+    case "left":
+      textAlign = [1, 0, 0, 0];
+    case "right":
+      textAlign = [0, 1, 0, 0];
+    case "center":
+      textAlign = [0, 0, 1, 0];
+    case "justify":
+      textAlign = [0, 0, 0, 1];
+    default:
+      textAlign = NaN;
+  }
+  return {color:color, textAlign:textAlign};
 }
-var element = arguments[0]//temp0;
-console.log(getCSSFeatures(element));
-
-/*
-Exception: ReferenceError: sStyle is not defined
-getCSSFeatures@Scratchpad/4:11:15
-@Scratchpad/4:15:1
-*/
+var element = temp0;//arguments[0]
+tmp = getCSSFeatures(element);
+console.log(tmp);
+//return tmp;
