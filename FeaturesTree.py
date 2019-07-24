@@ -105,7 +105,8 @@ class FeaturesTree():#DOM tree features sets
         dom_thread.join()
         css_thread.join()
         return fNode
-    def computeDOMFeatures(self, fNode):#compute node non-css-features (only for element node)
+    #compute node non-css-features (only for element node)
+    def computeDOMFeatures(self, fNode):
         #summing the features compute from children's/descendents' features
         n_char = n_node = n_tag = n_link = n_link_char = DS = 0
         for fChild in fNode.children:
@@ -143,6 +144,8 @@ class FeaturesTree():#DOM tree features sets
         #nLCi = n_char - LCi## of non-link characters under node i         
         #fNode.DOM_derive_features["CTD"] = (n_char/Ti)*log((n_char*Ti/LCi*LTi),log(n_char*LCi/nLCi+LCb*n_char/Cb+exp(1)))
         fNode.DOM_derive_features["DS"] = DS
+    #############################devide into thread
+    #############################combine children/descendant's features
     def computeCSSFeatures(self, node, fNode):
         #color
         color = [float(x[0]) for x in re.findall(self.num_re, node.value_of_css_property('color'))]
@@ -192,7 +195,6 @@ class FeaturesTree():#DOM tree features sets
         padding = [pd_top, pd_right, pd_bottom, pd_left]
         #width, height, area, coordinate (included border & padding)
         rect = node.rect
-        print(rect)
         width = rect["width"]
         height = rect["height"]
         area = width * height

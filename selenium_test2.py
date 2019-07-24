@@ -24,7 +24,7 @@ if __name__ == '__main__':
     driver.session_id = session_id
     print(driver.command_executor._url)
     print(driver.session_id)
-    driver.get("file:///D:/Downloads/dragnet_data-master/HTML/test.html")
+    driver.get("file:///D:/Downloads/dragnet_data-master/HTML/83.html")
     print(driver.current_url)
     ftree = ft.FeaturesTree(driver.find_element_by_tag_name("html"), driver, 
                             "D:\\Downloads\\top_100_fonts_lowercase.csv", "./returnChildNodes.js")
