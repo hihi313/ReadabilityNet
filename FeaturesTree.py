@@ -31,6 +31,7 @@ class FeaturesTag(NodeMixin):#non-text node
 class FeaturesText(NodeMixin):#for text node
     def __init__(self, strValue=None, parent=None, children=None):
         super(FeaturesText, self).__init__()
+        ############################################primitive may need to be declar as constant############################################################## 
         self.name = "String"
         self.strValue = strValue
         self.parent = parent
@@ -49,6 +50,7 @@ class FeaturesText(NodeMixin):#for text node
         self.DOM_derive_features = dict(CNR = len(strValue), TaD = 0)
                 
 class FeaturesTree():#DOM tree features sets
+    ##################################################prevent using file io, in case wanna pickle the object #############################################
     def __init__(self, html, driver, top_fonts_dir_low, get_children_js_dir):
         self.html = html
         self.driver = driver
@@ -144,8 +146,8 @@ class FeaturesTree():#DOM tree features sets
         #nLCi = n_char - LCi## of non-link characters under node i         
         #fNode.DOM_derive_features["CTD"] = (n_char/Ti)*log((n_char*Ti/LCi*LTi),log(n_char*LCi/nLCi+LCb*n_char/Cb+exp(1)))
         fNode.DOM_derive_features["DS"] = DS
-    #############################devide into thread
-    #############################combine children/descendant's features
+    #############################devide into thread########################################################3###############
+    #############################combine children/descendant's features#####################################################################
     def computeCSSFeatures(self, node, fNode):
         #color
         color = [float(x[0]) for x in re.findall(self.num_re, node.value_of_css_property('color'))]
