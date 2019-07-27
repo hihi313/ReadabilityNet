@@ -10,7 +10,7 @@ for(var i = 0; i < node.length; i++){
 			arr.push(str)//just store the plain text value
 		}
 	}else if(ni.nodeType == 1){//element node
-		if(ni.tagName == "SCRIPT" || ni.tagName == "STYLE" || ni.tagName == "LINK"){
+		if(ni.tagName == "SCRIPT" || ni.tagName == "STYLE" || ni.tagName == "LINK" || ni.tagName == "NOSCRIPT"){
 			//pass
 		}else{
 			arr.push(ni);
