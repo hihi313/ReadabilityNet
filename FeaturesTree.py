@@ -1,6 +1,5 @@
-from anytree import NodeMixin
+from anytree import NodeMixin, RenderTree
 import threading
-from anytree import RenderTree
 #from math import log, exp
 import re, csv
 
@@ -16,18 +15,23 @@ class FeaturesTag(NodeMixin):#non-text node
         #features
         #DOM raw features, no need to compute
         ## of character under(inclusive) the node, # of node(inclusive), # of tag(inclusive), # of link, # of link's character
-        self.DOM_features = dict(n_char = None, n_node = None, n_tag = None, n_link = None, n_link_char = None)
+        self.DOM_features = dict(n_char=None, n_node=None, n_tag=None, 
+                             n_link=None, n_link_char=None)
+###########################################dict change to primitive ###################################################
         #DOM derive features
         #Char-Node ratio, Text Density, Tag Density, Link Density, Composite Text Density, Density Sum
         #None means not set, cause all these value >= 0
-        self.DOM_derive_features = dict(CNR = None, TD = None, TaD = None, LD = None, CTD = None, DS = None)
+        self.DOM_derive_features = dict(CNR=None, TD=None, TaD=None, 
+                                    LD=None, CTD=None, DS=None)
         #CSS raw feature
         #show = webelement.is_displayed()
-        self.CSS_features = dict(color = None, lineHeight = None, fontFamily = None, borderWidth = None,
-                                     margin = None, padding = None, width = None, height = None,
-                                     display = None)
+        self.CSS_features = dict(color=None, lineHeight=None, 
+                             fontFamily=None, borderWidth=None, 
+                             margin=None, padding=None, width=None, 
+                             height=None, display=None)
         #CSS derive features
-        self.CSS_derive_features = dict(area = None, coordinate = None, show = None)
+        self.CSS_derive_features = dict(area=None, coordinate=None, 
+                                    show=None)
 class FeaturesText(NodeMixin):#for text node
     def __init__(self, strValue=None, parent=None, children=None):
         super(FeaturesText, self).__init__()
@@ -42,12 +46,13 @@ class FeaturesText(NodeMixin):#for text node
         #features
         #DOM raw features, no need to compute
         ## of character under(inclusive) the node, # of node(inclusive), # of tag(inclusive), # of link, # of link's character
-        self.DOM_features = dict(n_char = len(strValue), n_node = 1, n_tag = 0, n_link = 0, n_link_char = 0)
+        self.DOM_features = dict(n_char=len(strValue), n_node=1, n_tag=0, 
+                             n_link=0, n_link_char=0)
         #cause Text nodes are leaves node and non-tag element, 
         #Text nodes have no Text Density (TD), CTD, LD, DS, n_tag, n_link, n_link_char
         #Char-Node ratio, Text Density, Link Density, Composite Text Density, Density Sum
         #None means not set, cause all these value >= 0        
-        self.DOM_derive_features = dict(CNR = len(strValue), TaD = 0)
+        self.DOM_derive_features = dict(CNR=len(strValue), TaD=0)
                 
 class FeaturesTree():#DOM tree features sets
     ##################################################prevent using file io, in case wanna pickle the object #############################################
@@ -59,8 +64,8 @@ class FeaturesTree():#DOM tree features sets
         #number regex
         self.num_re = "[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
         #general fonts
-        self.gfonts = ["serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui",
-                  "emoji", "math", "fangsong"]
+        self.gfonts = ["serif", "sans-serif", "monospace", "cursive", 
+                       "fantasy", "system-ui", "emoji", "math", "fangsong"]
         self.fonts = []# ~= top 100 fonts
         #make top 100 fonts list, fonts name in the file should be lower case
         with open(top_fonts_dir_low, encoding="utf-8") as f:
@@ -73,16 +78,20 @@ class FeaturesTree():#DOM tree features sets
         #length unit regex
         self.length_re = "px"
         #display property value array
-        self.display_arr = ["inline", "block", "contents", "flex", "grid", "inline-block", "inline-flex",
-                        "inline-grid", "inline-table", "list-item", "table", "table-caption", 
-                        "table-column-group", "table-header-group", "table-footer-group", 
-                        "table-row-group", "table-cell", "table-column", "table-rownone"]
+        self.display_arr = ["inline", "block", "contents", "flex", "grid", 
+                            "inline-block", "inline-flex", "inline-grid", 
+                            "inline-table", "list-item", "table", 
+                            "table-caption", "table-column-group", 
+                            "table-header-group", "table-footer-group", 
+                            "table-row-group", "table-cell", "table-column", 
+                            "table-rownone"]
         #JavaScript file/code to retrieve all children node (include text node) of given node
         self.returnChildeNodes_js = open(get_children_js_dir, "r").read()
     def DFT_driver(self):#traverse DOM tree bottom-up, depth first traverse
         self.root = self.DFT(self.html, None)#html is root
         return self.root    
-    def DFT(self, node, fParent):
+    def DFT(self, node, fParent, pCollector):
+        '''
         #create current node
         if type(node) is str:#text node, initial is html element, it's not str object
             fNode = FeaturesText(strValue=node, parent=fParent)
@@ -107,6 +116,59 @@ class FeaturesTree():#DOM tree features sets
         dom_thread.join()
         css_thread.join()
         return fNode
+        '''
+        if type(node) is str:#text node
+            fNode = FeaturesText(strValue=node, parent=fParent)
+            return fNode #text node no need to(already) compute features
+        else:#element node
+            fNode = FeaturesTag(name=node.tag_name, parent=fParent)
+            cFeatures = {"n_char": 0, "n_node": 0, "n_tag": 0, "n_link": 0,
+                         "n_link_char": 0, "DS": 0}#collect children features collector
+            for nChild in self.driver.execute_script(self.returnChildeNodes_js, node):#extract every child by JavaScript (invluce text node)
+                fChild_thread = threading.Thread(target=self.DFT, 
+                                                 args=(nChild, fNode, cFeatures,))#compute the children of f_child features
+                fChild_thread.start()
+                fChild_thread.join()
+        #compute current node's features
+        dom_thread = threading.Thread(target=self.computeDOMFeatures, 
+                                      args=(fNode, cFeatures,))
+        css_thread = threading.Thread(target=self.computeCSSFeatures, 
+                                      args=(node, fNode,))
+        dom_thread.start()        
+        css_thread.start()
+        dom_thread.join()
+        css_thread.join()
+        #collect features for parent's children features collector
+        pCollector["n_char"] += fNode.DOM_features["n_char"]
+        pCollector["n_node"] += fNode.DOM_features["n_node"]
+        pCollector["n_tag"] += fNode.DOM_features["n_tag"]
+        pCollector["n_link"] += fNode.DOM_features["n_link"]
+        pCollector["n_link_char"] += fNode.DOM_features["n_link_char"]
+        pCollector["DS"] += fNode.DOM_features["TD"]
+        return fNode
+    #compute element node DOM features
+    def computeDOMFeatures(self, fNode, collector):
+        #DOM features
+        Ci = fNode.DOM_features["n_char"] = collector["n_char"]
+        fNode.DOM_features["n_node"] = collector["n_node"] + 1 #current node are included
+        Ti = fNode.DOM_features["n_tag"] = collector["n_tag"] + 1        
+        if fNode.name == 'a':#current node is anchor
+            LTi = fNode.DOM_features["n_link"] = collector["n_link"] + 1
+            fNode.DOM_features["n_link_char"] = collector["n_char"]
+        else:
+            LTi = fNode.DOM_features["n_link"] = collector["n_link"]
+            fNode.DOM_features["n_link_char"] = collector["n_link_char"]
+        #DOM derive features        
+        fNode.DOM_derive_features["CNR"] = Ci/fNode.DOM_features["n_node"]
+        fNode.DOM_derive_features["TD"] = Ci/Ti
+        fNode.DOM_derive_features["TaD"] = Ti/(Ci + 1)
+        fNode.DOM_derive_features["LD"] = LTi/(Ti + 1)
+        #temporary not used, cause require LCb & Cb under the body element node
+        #LCi = fNode.DOM_features["n_link_char"]
+        #nLCi = n_char - LCi## of non-link characters under node i         
+        #fNode.DOM_derive_features["CTD"] = (n_char/Ti)*log((n_char*Ti/LCi*LTi),log(n_char*LCi/nLCi+LCb*n_char/Cb+exp(1)))
+        fNode.DOM_derive_features["DS"] = collector["DS"]
+    '''    
     #compute node non-css-features (only for element node)
     def computeDOMFeatures(self, fNode):
         #summing the features compute from children's/descendents' features
@@ -146,6 +208,7 @@ class FeaturesTree():#DOM tree features sets
         #nLCi = n_char - LCi## of non-link characters under node i         
         #fNode.DOM_derive_features["CTD"] = (n_char/Ti)*log((n_char*Ti/LCi*LTi),log(n_char*LCi/nLCi+LCb*n_char/Cb+exp(1)))
         fNode.DOM_derive_features["DS"] = DS
+    '''
     #############################devide into thread########################################################3###############
     #############################combine children/descendant's features#####################################################################
     def computeCSSFeatures(self, node, fNode):
