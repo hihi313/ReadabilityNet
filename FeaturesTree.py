@@ -88,7 +88,7 @@ class FeaturesTree():#DOM tree features sets
         #JavaScript file/code to retrieve all children node (include text node) of given node
         self.returnChildeNodes_js = open(get_children_js_dir, "r").read()
     def DFT_driver(self):#traverse DOM tree bottom-up, depth first traverse
-        self.root = self.DFT(self.html, None)#html is root
+        self.root = self.DFT(self.html, None, None)#html is root
         return self.root    
     def DFT(self, node, fParent, pCollector):
         '''
@@ -118,8 +118,7 @@ class FeaturesTree():#DOM tree features sets
         return fNode
         '''
         if type(node) is str:#text node
-            fNode = FeaturesText(strValue=node, parent=fParent)
-            return fNode #text node no need to(already) compute features
+            fNode = FeaturesText(strValue=node, parent=fParent)#construct text node & compute features
         else:#element node
             fNode = FeaturesTag(name=node.tag_name, parent=fParent)
             cFeatures = {"n_char": 0, "n_node": 0, "n_tag": 0, "n_link": 0,
@@ -129,22 +128,23 @@ class FeaturesTree():#DOM tree features sets
                                                  args=(nChild, fNode, cFeatures,))#compute the children of f_child features
                 fChild_thread.start()
                 fChild_thread.join()
-        #compute current node's features
-        dom_thread = threading.Thread(target=self.computeDOMFeatures, 
-                                      args=(fNode, cFeatures,))
-        css_thread = threading.Thread(target=self.computeCSSFeatures, 
-                                      args=(node, fNode,))
-        dom_thread.start()        
-        css_thread.start()
-        dom_thread.join()
-        css_thread.join()
+            #compute current element node's features, combine current node's features & children's features
+            dom_thread = threading.Thread(target=self.computeDOMFeatures, 
+                                          args=(fNode, cFeatures,))
+            css_thread = threading.Thread(target=self.computeCSSFeatures, 
+                                          args=(node, fNode,))
+            dom_thread.start()        
+            css_thread.start()
+            dom_thread.join()
+            css_thread.join()
         #collect features for parent's children features collector
-        pCollector["n_char"] += fNode.DOM_features["n_char"]
-        pCollector["n_node"] += fNode.DOM_features["n_node"]
-        pCollector["n_tag"] += fNode.DOM_features["n_tag"]
-        pCollector["n_link"] += fNode.DOM_features["n_link"]
-        pCollector["n_link_char"] += fNode.DOM_features["n_link_char"]
-        pCollector["DS"] += fNode.DOM_features["TD"]
+        if pCollector:#if not None
+            pCollector["n_char"] += fNode.DOM_features["n_char"]
+            pCollector["n_node"] += fNode.DOM_features["n_node"]
+            pCollector["n_tag"] += fNode.DOM_features["n_tag"]
+            pCollector["n_link"] += fNode.DOM_features["n_link"]
+            pCollector["n_link_char"] += fNode.DOM_features["n_link_char"]
+            pCollector["DS"] += fNode.DOM_derive_features["TD"] if "TD" in fNode.DOM_derive_features else 0
         return fNode
     #compute element node DOM features
     def computeDOMFeatures(self, fNode, collector):

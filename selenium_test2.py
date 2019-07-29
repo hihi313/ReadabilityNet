@@ -25,7 +25,7 @@ if __name__ == '__main__':
     print(driver.command_executor._url)
     print(driver.session_id)
     str_load = time.time()
-    driver.get("file:///D:/Downloads/dragnet_data-master/HTML/R249.html")
+    driver.get("file:///D:/Downloads/dragnet_data-master/HTML/test.html")
     print(driver.current_url)
     str_cvrt = time.time()
     ftree = ft.FeaturesTree(driver.find_element_by_tag_name("html"), driver, 
