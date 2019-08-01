@@ -1,45 +1,57 @@
+import datetime
+import csv
 from os import listdir
 from os.path import isfile, join
-from selenium import webdriver
-import FeaturesTree as ft
+
 from anytree.exporter import JsonExporter
-import datetime
+from selenium import webdriver
+
+import FeaturesTree as ft
+
 
 if __name__ == '__main__':
-    #get all webpage
+    # get all webpage
     #path = "D:/Downloads/dragnet_data-master/HTML"
     #files = [f for f in listdir(path) if isfile(join(path, f))]
-    #read previous session
+    # read previous session
     with open("D:/Downloads/browserSession.txt", "r") as f:
         executor_url = f.readline()
-        session_id = f.readline()        
+        session_id = f.readline()
         f.close()
-    #browser options
+    # browser options
     options = webdriver.ChromeOptions()
-    options.add_argument('-headless')        
+    options.add_argument('-headless')
     driver = webdriver.Remote(command_executor=executor_url,
                               desired_capabilities={},
-                              options = options)
-    #close new opened windows
+                              options=options)
+    # close new opened windows
     driver.close()
-    #attach to exist browser
+    # attach to exist browser
     driver.session_id = session_id
     print(driver.command_executor._url)
     print(driver.session_id)
-    #get webpage
+    # get webpage
     driver.get("file:///D:/Downloads/dragnet_data-master/HTML/test.html")
     print(driver.current_url)
-    #start parsing
+    # start parsing
     str_cvrt = datetime.datetime.now()
-    ftree = ft.FeaturesTree(driver.find_element_by_tag_name("html"), driver, 
-                            "D:\\Downloads\\top_100_fonts_lowercase.csv", 
-                            "./returnChildNodes.js")
-    root = ftree.DFT_driver()
-    #print as tree format
-    #ftree.printTree(root)
-    #print as JSON format
+    with open("D:\\Downloads\\top_100_fonts_lowercase.csv",
+              encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        fonts = [row["font"] for row in reader]
+    returnChildNodesJs = open("./returnChildNodes.js", "r",
+                              encoding="utf-8").read()
+    ftree = ft.FeaturesTree(fonts, returnChildNodesJs)
+    #root = ftree.DFT_driver(driver, driver.find_element_by_tag_name("html"))
+    c = driver.find_element_by_tag_name("html").value_of_css_property("color")
+    print(c)
+    # print as tree format
+    # ftree.printTree(root)
+    # print as JSON format
+    '''
     end_cvrt = datetime.datetime.now()
     exporter = JsonExporter(indent=2)
     print(exporter.export(root))
-    #print duration time
+    # print duration time
     print(end_cvrt - str_cvrt)
+    '''

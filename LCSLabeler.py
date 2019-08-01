@@ -47,6 +47,7 @@ class LCSLabeler():
             node.matches = self.LCS(txt)
         #similarity
         node.similarity = node.matches/node.DOM_features["n_char"] if node.DOM_features["n_char"] != 0 else node.matches
+################################ change to edit distance ? ####################################
     def LCS(self, txt):
         m = len(self.gold_standard)
         n = len(txt)
