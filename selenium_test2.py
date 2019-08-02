@@ -35,23 +35,22 @@ if __name__ == '__main__':
     print(driver.current_url)
     # start parsing
     str_cvrt = datetime.datetime.now()
+    #get top fonts array
     with open("D:\\Downloads\\top_100_fonts_lowercase.csv",
               encoding="utf-8") as f:
         reader = csv.DictReader(f)
         fonts = [row["font"] for row in reader]
+    #get required JavaScript script
     returnChildNodesJs = open("./returnChildNodes.js", "r",
                               encoding="utf-8").read()
     ftree = ft.FeaturesTree(fonts, returnChildNodesJs)
-    #root = ftree.DFT_driver(driver, driver.find_element_by_tag_name("html"))
-    c = driver.find_element_by_tag_name("html").value_of_css_property("color")
-    print(c)
-    # print as tree format
+    root = ftree.DFT_driver(driver, driver.find_element_by_tag_name("html"))
+    #print as tree format
     # ftree.printTree(root)
     # print as JSON format
-    '''
+    
     end_cvrt = datetime.datetime.now()
     exporter = JsonExporter(indent=2)
     print(exporter.export(root))
     # print duration time
     print(end_cvrt - str_cvrt)
-    '''
