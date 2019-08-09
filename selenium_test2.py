@@ -44,7 +44,8 @@ if __name__ == '__main__':
     returnChildNodesJs = open("./returnChildNodes.js", "r",
                               encoding="utf-8").read()
     ftree = ft.FeaturesTree(fonts, returnChildNodesJs)
-    root = ftree.DFT_driver(driver, driver.find_element_by_tag_name("html"))
+    html = driver.find_element_by_tag_name("html")
+    root = ftree.DFT_driver(driver, html)
     #print as tree format
     # ftree.printTree(root)
     # print as JSON format
