@@ -70,6 +70,19 @@ class FeaturesText(NodeMixin):
         self.DOM_derive_features = {"CNR": len(strValue), "TaD": 0, "LD": 0,
                                     "CTD": None}
 
+# for invisible tag (<html> & tag inside <head>(include)) 
+class Tag(NodeMixin):
+    def __init__(self, name=None, parent=None, children=None):
+        super(FeaturesText, self).__init__()
+        # primitive may need to be de
+        self.name = name
+        self.parent = parent
+        if children:
+            self.children = children
+        '''
+        this kind of tags have no features, cause always invisible
+        '''
+
 # DOM tree features Tree constructor
 ################################################################################ invisible tag inside(include) <head> should not have any DOM & CSS features
 class FeaturesTree():
@@ -84,6 +97,10 @@ class FeaturesTree():
         # length unit regex
         self.length_re = "px"
         # colors
+        ''' 
+        need to be ordered, in oder to convert to array, the dict keys are 
+        used to indentify the color/give the color a name
+        '''
         self.colors = OrderedDict()
         self.colors["red"] = (255, 0, 0, 1)  # red
         self.colors["orange"] = (255, 165, 0, 1) # orange
@@ -119,8 +136,7 @@ class FeaturesTree():
         self.driver = driver
         self.html = node
         #html is root
-        info = {"backgroundColor": self.colors["white"]}
-        self.root = self.DFT(self.html, None, None, info)
+        self.root = self.DFT(self.html, None, None, None)
         return self.root
 
     def DFT(self, node, fParent, pCollector, pInfo):
@@ -131,23 +147,28 @@ class FeaturesTree():
         # element node
         else:
             fNode = FeaturesTag(name=node.tag_name, parent=fParent)
-            # collect children features collector
-            cCollector = {"n_char": 0, "n_node": 0, "n_tag": 0, "n_link": 0,
+            # children features collector
+            '''
+            some features depend on children's feature
+            '''
+            collector = {"n_char": 0, "n_node": 0, "n_tag": 0, "n_link": 0,
                          "n_link_char": 0, "DS": 0, 
-                         ####################################################### turn to ordered dict
-                         "color": {k: 0 for k in self.colors},
-                         "backgroundColor": {k: 0 for k in self.colors}}
-            info = {"color": self.getSelfColor(node), 
-                    "bgColor": self.getSelfDisplayBackgroundColor(pInfo,
-                                                                       node),
-                    "rect": node.rect}
+                         "color": self.color.fromkeys(self.color, 0),
+                         "backgroundColor": self.color.fromkeys(self.color, 0)}
+            # current node informations
+            '''
+            some children's features need to take parent's features consider.
+            can be treat as pre-collect the node's features.
+            '''
+            info = {"color": self.getSelfColorName(node), 
+                    "bgColor": self.getSelfDisplayBackgroundColor(pInfo, node)}
             # extract every child by JavaScript (include text node)
             threads = []
             for nChild in self.driver.execute_script(self.returnChildeNodes_js,
                                                      node):
                 # compute the children of f_child features                
                 fChild_thread = threading.Thread(target=self.DFT,
-                                                 args=(nChild, fNode, cCollector,
+                                                 args=(nChild, fNode, collector,
                                                        info,))
                 fChild_thread.start()
                 threads.append(fChild_thread)
@@ -156,9 +177,9 @@ class FeaturesTree():
             # compute current element node's features,
             # combine current node's features & children's features
             dom_thread = threading.Thread(target=self.computeDOMFeatures,
-                                          args=(fNode, cCollector,))
+                                          args=(fNode, collector,))
             css_thread = threading.Thread(target=self.computeCSSFeatures,
-                                          args=(node, fNode, info, cCollector,))
+                                          args=(node, fNode, info, collector,))
             dom_thread.start()
             css_thread.start()
             dom_thread.join()
@@ -178,28 +199,28 @@ class FeaturesTree():
                 # skip background color
             else:# element node
                 pCollector["DS"] += fNode.DOM_derive_features["TD"]
-                #current node's color feature's (array) "values" == cCollector["color"] (dict)
+                #current node's color feature's (array) "values" == collector["color"] (dict)
                 pCollector["color"] = addDict(pCollector["color"], 
-                                              cCollector["color"])
+                                              collector["color"])
                 pCollector["backgroundColor"] = addDict(pCollector["backgroundColor"], 
-                                                        cCollector["backgroundColor"])
+                                                        collector["backgroundColor"])
 
         return fNode
 
     # compute element node DOM features
-    def computeDOMFeatures(self, fNode, cCollector):
+    def computeDOMFeatures(self, fNode, collector):
         # DOM features
-        Ci = fNode.DOM_features["n_char"] = cCollector["n_char"]
+        Ci = fNode.DOM_features["n_char"] = collector["n_char"]
         # current node are included
-        fNode.DOM_features["n_node"] = cCollector["n_node"] + 1
-        Ti = fNode.DOM_features["n_tag"] = cCollector["n_tag"] + 1
+        fNode.DOM_features["n_node"] = collector["n_node"] + 1
+        Ti = fNode.DOM_features["n_tag"] = collector["n_tag"] + 1
         # current node is anchor
         if fNode.name == 'a':
-            LTi = fNode.DOM_features["n_link"] = cCollector["n_link"] + 1
-            fNode.DOM_features["n_link_char"] = cCollector["n_char"]
+            LTi = fNode.DOM_features["n_link"] = collector["n_link"] + 1
+            fNode.DOM_features["n_link_char"] = collector["n_char"]
         else:
-            LTi = fNode.DOM_features["n_link"] = cCollector["n_link"]
-            fNode.DOM_features["n_link_char"] = cCollector["n_link_char"]
+            LTi = fNode.DOM_features["n_link"] = collector["n_link"]
+            fNode.DOM_features["n_link_char"] = collector["n_link_char"]
         # DOM derive features
         fNode.DOM_derive_features["CNR"] = Ci / fNode.DOM_features["n_node"]
         fNode.DOM_derive_features["TD"] = Ci / Ti
@@ -209,16 +230,16 @@ class FeaturesTree():
         #LCi = fNode.DOM_features["n_link_char"]
         # nLCi = n_char - LCi## non-link characters under node i
         #fNode.DOM_derive_features["CTD"] = (n_char/Ti)*log((n_char*Ti/LCi*LTi),log(n_char*LCi/nLCi+LCb*n_char/Cb+exp(1)))
-        fNode.DOM_derive_features["DS"] = cCollector["DS"]
+        fNode.DOM_derive_features["DS"] = collector["DS"]
 
     ############################################################################ get properties first then make features computation treaded
     ############################################################################ combine children/descendant's features
-    def computeCSSFeatures(self, node, fNode, info, cCollector):
-        self.getColor(fNode, cCollector, True)
+    def computeCSSFeatures(self, node, fNode, info, collector):
+        self.getColor(fNode, collector, True)
         getFunc = [self.getLineHeight, self.getFontFamily, 
                     self.getBorderWidth, self.getMargin, self.getPadding,
                     self.getGeometric, self.getDisplay, self.getShow]
-        self.getBackgroundColor(fNode, info, cCollector, True)
+        self.getBackgroundColor(fNode, info, collector, True)
         threads = []
         for f in getFunc:
             t = threading.Thread(target = f, args = (node, fNode, ))
@@ -228,7 +249,7 @@ class FeaturesTree():
             t.join()
        
     # just get current node's color
-    def getSelfColor(self, node):
+    def getSelfColorName(self, node):
         rgba = [float(x[0]) for x in re.findall(
             self.num_re, node.value_of_css_property('color'))]
         distances = {k: manhattan(v, rgba) for k, v in self.colors.items()}
@@ -246,13 +267,13 @@ class FeaturesTree():
         #return color name
         return [result, min(distances, key=distances.get)]
     
-    def getBackgroundColor(self, fNode, info, cCollector, debug = False):
-        fNode.CSS_features["backgroundColor"] = cCollector["backgroundColor"]
+    def getBackgroundColor(self, fNode, info, collector, debug = False):
+        fNode.CSS_features["backgroundColor"] = collector["backgroundColor"]
         # add self background color area
         bgName = info["bgColor"][1]
         fNode.CSS_features["backgroundColor"][bgName] += info["rect"]["width"] * info["rect"]["height"]
         # minus the overlap area
-        for k, v in cCollector["backgroundColor"].items():
+        for k, v in collector["backgroundColor"].items():
             if k != bgName:
                 fNode.CSS_features["backgroundColor"][bgName] -= v
         if not debug:
@@ -260,13 +281,13 @@ class FeaturesTree():
             fNode.CSS_features["backgroundColor"] = [fNode.CSS_features["backgroundColor"][k] for k in fNode.CSS_features["backgroundColor"]]
     
     # get the char color statistic dict of current node 
-    def getColor(self, fNode, cCollector, debug = False): 
+    def getColor(self, fNode, collector, debug = False): 
         if debug:
             #debug mode, show color name
-            fNode.CSS_features["color"] = cCollector["color"]
+            fNode.CSS_features["color"] = collector["color"]
         else:
             #convert (ordered) dict to array                     
-            fNode.CSS_features["color"] = [cCollector["color"][k] for k in cCollector["color"]]
+            fNode.CSS_features["color"] = [collector["color"][k] for k in collector["color"]]
 
     def getLineHeight(self, node, fNode):
         lh_tmp = node.value_of_css_property('line-height')
