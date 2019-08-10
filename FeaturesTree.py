@@ -71,6 +71,7 @@ class FeaturesText(NodeMixin):
                                     "CTD": None}
 
 # DOM tree features Tree constructor
+################################################################################ invisible tag inside(include) <head> should not have any DOM & CSS features
 class FeaturesTree():
     # prevent using file io, i
     def __init__(self, font_list_lower, returnChildeNodes_js):
@@ -118,7 +119,7 @@ class FeaturesTree():
         self.driver = driver
         self.html = node
         #html is root
-        info = {"bgColor": [self.colors["white"], "white"]}
+        info = {"backgroundColor": self.colors["white"]}
         self.root = self.DFT(self.html, None, None, info)
         return self.root
 
