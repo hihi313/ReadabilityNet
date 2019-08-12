@@ -1,14 +1,70 @@
 from anytree import NodeMixin, RenderTree
 from operator import add
 from collections import OrderedDict
-import re, threading
+import re, threading, csv
 #from math import log, exp
+
+# node type
+class Type():
+    TAG = 0;
+    FEATURES_TAG = 1
+    FEATURES_TEXT = 2
+
+# common used variables
+class CommonVars():
+    def __init__(self, fonts_lower_path, returnChildeNode_path, returnNodeAttrs_path):
+        # open files
+        # get top fonts & convert to array
+        with open(fonts_lower_path, encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            font_list = [row["font"] for row in reader] # need to be ordered
+        # get required JavaScript script
+        self.childNodesJs = open(returnChildeNode_path, "r",
+                                  encoding="utf-8").read()
+        self.nodeAttributesJs = open(returnNodeAttrs_path, "r",
+                                  encoding="utf-8").read()
+        # REGEX
+        # number
+        self.num_re = "[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
+        # length unit
+        self.length_re = "px"
+        # colors
+        ''' 
+        need to be ordered, in oder to convert to array, the dict keys are 
+        used to identify the color/give the color a name
+        '''
+        self.colors = OrderedDict()
+        self.colors["red"] = (255, 0, 0, 1)  # red
+        self.colors["orange"] = (255, 165, 0, 1) # orange
+        self.colors["yellow"] = (255, 255, 0, 1) # yellow
+        self.colors["green"] = (0, 255, 0, 1) # green
+        self.colors["blue"] = (0, 0, 255, 1) # blue
+        self.colors["purple"] = (128, 0, 128, 1) # purple
+        self.colors["black"] = (0, 0, 0, 1) # black
+        self.colors["gray"] = (128, 128, 128, 1) # gray
+        self.colors["white"] = (255, 255, 255, 1) # white
+        # general fonts
+        self.gfonts = ["serif", "sans-serif", "monospace", "cursive",
+                       "fantasy", "system-ui", "emoji", "math", "fangsong"]
+        # top N fonts
+        self.Nfonts = 42
+        self.fonts = [f for f in font_list[:self.Nfonts]
+                      if f not in self.gfonts]
+        # display property value array
+        self.display_arr = ["inline", "block", "contents", "flex", "grid",
+                            "inline-block", "inline-flex", "inline-grid",
+                            "inline-table", "list-item", "table",
+                            "table-caption", "table-column-group",
+                            "table-header-group", "table-footer-group",
+                            "table-row-group", "table-cell", "table-column",
+                            "table-rownone"]
 
 # element node
 class FeaturesTag(NodeMixin):
-    def __init__(self, name, parent=None, children=None):
+    def __init__(self, tagName, parent=None, children=None):
         super(FeaturesTag, self).__init__()
-        self.name = name
+        self.type = Type.FEATURES_TAG
+        self.tagName = tagName
         self.parent = parent
         if children:
             self.children = children
@@ -47,7 +103,7 @@ class FeaturesText(NodeMixin):
     def __init__(self, strValue=None, parent=None, children=None):
         super(FeaturesText, self).__init__()
         # primitive may need to be de
-        self.name = "String"
+        self.type = Type.FEATURES_TEXT
         self.strValue = strValue
         self.parent = parent
         if children:
@@ -70,70 +126,38 @@ class FeaturesText(NodeMixin):
         self.DOM_derive_features = {"CNR": len(strValue), "TaD": 0, "LD": 0,
                                     "CTD": None}
 
-# for invisible tag (<html> & tag inside <head>(include)) 
+# for invisible node (tag not in body)
+'''
+<html>, <head>, <title>, <base>, <meta>
+not include : <script>, <style>, <link>, <noscript>
+'''
 class Tag(NodeMixin):
-    def __init__(self, name=None, parent=None, children=None):
-        super(FeaturesText, self).__init__()
+    def __init__(self, tagName, parent=None, children=None, attrs=None):
+        super(Tag, self).__init__()
         # primitive may need to be de
-        self.name = name
+        self.type = Type.TAG
+        self.tagName = tagName
         self.parent = parent
         if children:
             self.children = children
         '''
         this kind of tags have no features, cause always invisible
         '''
+        # attributes on the node
+        if attrs:
+            self.attributes = attrs
 
 # DOM tree features Tree constructor
-################################################################################ invisible tag inside(include) <head> should not have any DOM & CSS features
 class FeaturesTree():
-    # prevent using file io, i
-    def __init__(self, font_list_lower, returnChildeNodes_js):
-        self.driver = None  # used to execute Javascript to obtain child Nodes
-        self.root = None
-        self.html = None
-        # common used variables
-        # number regex
-        self.num_re = "[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
-        # length unit regex
-        self.length_re = "px"
-        # colors
-        ''' 
-        need to be ordered, in oder to convert to array, the dict keys are 
-        used to indentify the color/give the color a name
-        '''
-        self.colors = OrderedDict()
-        self.colors["red"] = (255, 0, 0, 1)  # red
-        self.colors["orange"] = (255, 165, 0, 1) # orange
-        self.colors["yellow"] = (255, 255, 0, 1) # yellow
-        self.colors["green"] = (0, 255, 0, 1) # green
-        self.colors["blue"] = (0, 0, 255, 1) # blue
-        self.colors["purple"] = (128, 0, 128, 1) # purple
-        self.colors["black"] = (0, 0, 0, 1) # black
-        self.colors["gray"] = (128, 128, 128, 1) # gray
-        self.colors["white"] = (255, 255, 255, 1) # white
-        ######################################################################## transparent fo backgound color
-        # general fonts
-        self.gfonts = ["serif", "sans-serif", "monospace", "cursive",
-                       "fantasy", "system-ui", "emoji", "math", "fangsong"]
-        # top N fonts
-        Nfonts = 42
-        self.fonts = [f for f in font_list_lower[:Nfonts]
-                      if f not in self.gfonts]
-        # display property value array
-        self.display_arr = ["inline", "block", "contents", "flex", "grid",
-                            "inline-block", "inline-flex", "inline-grid",
-                            "inline-table", "list-item", "table",
-                            "table-caption", "table-column-group",
-                            "table-header-group", "table-footer-group",
-                            "table-row-group", "table-cell", "table-column",
-                            "table-rownone"]
-        # JavaScript file/code to retrieve all children node (include text node)
-        # of given node
-        self.returnChildeNodes_js = returnChildeNodes_js
+    def __init__(self, driver, vars):
+        self.driver = driver  # used to execute Javascript
+        self.vars = vars # common used variables
+        self.root = None # root of FeaturesTree
+        self.html = None # root of document
+        self.head = None # root of some meta data        
 
     # traverse DOM tree bottom-up, depth first traverse
-    def DFT_driver(self, driver, node):
-        self.driver = driver
+    def DFT_driver(self, node):
         self.html = node
         #html is root
         self.root = self.DFT(self.html, None, None, None)
@@ -146,44 +170,51 @@ class FeaturesTree():
             fNode = FeaturesText(strValue=node, parent=fParent)
         # element node
         else:
-            fNode = FeaturesTag(name=node.tag_name, parent=fParent)
-            # children features collector
-            '''
-            some features depend on children's feature
-            '''
-            collector = {"n_char": 0, "n_node": 0, "n_tag": 0, "n_link": 0,
-                         "n_link_char": 0, "DS": 0, 
-                         "color": self.color.fromkeys(self.color, 0),
-                         "backgroundColor": self.color.fromkeys(self.color, 0)}
-            # current node informations
-            '''
-            some children's features need to take parent's features consider.
-            can be treat as pre-collect the node's features.
-            '''
-            info = {"color": self.getSelfColorName(node), 
-                    "bgColor": self.getSelfDisplayBackgroundColor(pInfo, node)}
-            # extract every child by JavaScript (include text node)
-            threads = []
-            for nChild in self.driver.execute_script(self.returnChildeNodes_js,
-                                                     node):
-                # compute the children of f_child features                
-                fChild_thread = threading.Thread(target=self.DFT,
-                                                 args=(nChild, fNode, collector,
-                                                       info,))
-                fChild_thread.start()
-                threads.append(fChild_thread)
-            for t in threads:
-                t.join()
-            # compute current element node's features,
-            # combine current node's features & children's features
-            dom_thread = threading.Thread(target=self.computeDOMFeatures,
-                                          args=(fNode, collector,))
-            css_thread = threading.Thread(target=self.computeCSSFeatures,
-                                          args=(node, fNode, info, collector,))
-            dom_thread.start()
-            css_thread.start()
-            dom_thread.join()
-            css_thread.join()
+            tagName = node.tag_name
+            print(tagName)
+            if tagName == "html":
+                attrs = self.driver.execute_script(self.vars.nodeAttributesJs,
+                                                   node)
+                fNode = Tag(tagName = tagName, attrs = attrs, parent = fParent)
+                self.fork(node, fNode, None, None)
+                return fNode
+            elif tagName == "head":
+                attrs = self.driver.execute_script(self.vars.nodeAttributesJs,
+                                                   node)
+                # always partent at html(root)
+                fNode = self.head = Tag(tagName = tagName, attrs = attrs, 
+                                        parent = self.root)
+                self.fork(node, fNode, None, None)
+                return fNode
+            elif tagName == "title" or tagName == "base" or tagName == "meta": 
+                attrs = self.driver.execute_script(self.vars.nodeAttributesJs,
+                                                    node)
+                # always point these tags' parent at head
+                fNode = Tag(tagName = tagName, attrs = attrs, 
+                            parent = self.head)
+                self.fork(node, fNode, None, None)
+                return fNode
+            # other tags
+            else:
+                fNode = FeaturesTag(tagName=tagName, parent=fParent)
+                # children features collector
+                '''
+                some features depend on children's feature
+                '''
+                collector = {"n_char": 0, "n_node": 0, "n_tag": 0, "n_link": 0,
+                             "n_link_char": 0, "DS": 0, 
+                             "color": self.colors.fromkeys(self.colors, 0),
+                             "backgroundColor": self.colors.fromkeys(self.colors, 0)}
+                # current node informations
+                '''
+                some children's features need to take parent's features consider.
+                can be treat as pre-collect the node's features.
+                '''
+                info = {"colorName": self.getSelfColorName(node), 
+                        "backgroundColor": self.getSelfDisplayBackgroundColor(pInfo, node)}
+                self.fork(node, fNode, collector, info)
+                self.computeFeatures(node, fNode, collector, info)
+                
         # collect features for parent's children features collector
         ########################################################################adding CSS value (|background) & threaded
         if pCollector:  # if not None
@@ -207,6 +238,31 @@ class FeaturesTree():
 
         return fNode
 
+    def fork(self, node, fNode, collector, info):
+        # extract every child by JavaScript (include text node)   
+        threads = [] # children threads
+        for nChild in self.driver.execute_script(self.vars.childNodesJs, node):
+            # compute the children of f_child features                
+            fChild_thread = threading.Thread(target=self.DFT,
+                                             args=(nChild, fNode, collector,
+                                                   info,))
+            fChild_thread.start()
+            threads.append(fChild_thread)
+        for t in threads:
+            t.join()
+
+    def computeFeatures(self, node, fNode, collector, info):
+        # compute current element node's features,
+        # combine current node's features & children's features
+        dom_thread = threading.Thread(target=self.computeDOMFeatures,
+                                      args=(fNode, collector,))
+        css_thread = threading.Thread(target=self.computeCSSFeatures,
+                                      args=(node, fNode, info, collector,))
+        dom_thread.start()
+        css_thread.start()
+        dom_thread.join()
+        css_thread.join()
+        
     # compute element node DOM features
     def computeDOMFeatures(self, fNode, collector):
         # DOM features
@@ -215,7 +271,7 @@ class FeaturesTree():
         fNode.DOM_features["n_node"] = collector["n_node"] + 1
         Ti = fNode.DOM_features["n_tag"] = collector["n_tag"] + 1
         # current node is anchor
-        if fNode.name == 'a':
+        if fNode.tagName == 'a':
             LTi = fNode.DOM_features["n_link"] = collector["n_link"] + 1
             fNode.DOM_features["n_link_char"] = collector["n_char"]
         else:
@@ -260,12 +316,7 @@ class FeaturesTree():
     def getSelfDisplayBackgroundColor(self, pInfo, node):
         rgba = [float(x[0]) for x in re.findall(
                 self.num_re, node.value_of_css_property('background-color'))]
-        print(pInfo) 
-        result =  alphaBlending(rgba, pInfo["bgColor"][0])
-       
-        distances = {k: manhattan(v, result) for k, v in self.colors.items()}
-        #return color name
-        return [result, min(distances, key=distances.get)]
+        return alphaBlending(rgba, pInfo["backgroundColor"])  
     
     def getBackgroundColor(self, fNode, info, collector, debug = False):
         fNode.CSS_features["backgroundColor"] = collector["backgroundColor"]
@@ -373,7 +424,7 @@ class FeaturesTree():
     
     def printTree(self, root):
         for pre, _, node in RenderTree(root):
-            treestr = u"%s%s" % (pre, node.name)
+            treestr = u"%s%s" % (pre, node.tagName)
             print(treestr.ljust(8), getattr(node, "strValue", ""))
             
 #used to compute the difference between 2 colors

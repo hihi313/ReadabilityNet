@@ -32,20 +32,16 @@ if __name__ == '__main__':
     print(driver.session_id)
     # get webpage
     driver.get("file:///D:/Downloads/dragnet_data-master/HTML/test.html")
-    print(driver.current_url)
+    print(driver.current_url)    
+    # initialize & get common used variables
+    vars = ft.CommonVars("D:\\Downloads\\top_100_fonts_lowercase.csv", 
+                         "./returnChildNodes.js", 
+                         "./returnNodeAttributes.js")
     # start parsing
     str_cvrt = datetime.datetime.now()
-    #get top fonts array
-    with open("D:\\Downloads\\top_100_fonts_lowercase.csv",
-              encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        fonts = [row["font"] for row in reader]
-    #get required JavaScript script
-    returnChildNodesJs = open("./returnChildNodes.js", "r",
-                              encoding="utf-8").read()
-    ftree = ft.FeaturesTree(fonts, returnChildNodesJs)
+    ftree = ft.FeaturesTree(driver, vars)
     html = driver.find_element_by_tag_name("html")
-    root = ftree.DFT_driver(driver, html)
+    root = ftree.DFT_driver(html)
     #print as tree format
     # ftree.printTree(root)
     # print as JSON format
