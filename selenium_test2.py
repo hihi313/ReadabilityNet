@@ -39,7 +39,7 @@ if __name__ == '__main__':
                          "./returnNodeAttributes.js")
     # start parsing
     str_cvrt = datetime.datetime.now()
-    ftree = ft.FeaturesTree(driver, vars)
+    ftree = ft.FeaturesTree(driver, vars, debug = True)
     html = driver.find_element_by_tag_name("html")
     root = ftree.DFT_driver(html)
     #print as tree format

@@ -148,9 +148,9 @@ class Tag(NodeMixin):
 
 # DOM tree features Tree constructor
 class FeaturesTree():
-    def __init__(self, driver, vars, debug = False):
+    def __init__(self, driver, comVars, debug = False):
         self.driver = driver  # used to execute Javascript
-        self.vars = vars # common used variables
+        self.comVars = comVars # common used variables
         self.root = None # root of FeaturesTree
         self.html = None # root of document
         self.head = None # root of some meta data       
@@ -159,11 +159,11 @@ class FeaturesTree():
     # traverse DOM tree bottom-up, depth first traverse
     def DFT_driver(self, node):
         self.html = node
-        #html is root
-        self.root = self.DFT(self.html, None, None, None)
-        return self.root
+        # return root        
+        return self.DFT(self.html, None, None, None)
 
     def DFT(self, node, fParent, pCollector, pInfo):
+        collector = None
         # text node
         if type(node) is str:
             # construct text node & compute features
@@ -171,18 +171,19 @@ class FeaturesTree():
         # element node
         else:
             tagName = node.tag_name
+            # Tags, have no features, preserve attributes
             if tagName == "html":
-                attrs = self.driver.execute_script(self.vars.nodeAttributesJs,
+                attrs = self.driver.execute_script(self.comVars.nodeAttributesJs,
                                                    node)
                 # always root
-                fNode = Tag(tagName = tagName, attrs = attrs, parent = None)
+                fNode = self.root = Tag(tagName = tagName, attrs = attrs, 
+                                        parent = None)
                 # force setting background as white
-                info = {"baclgroundColor": self.vars.colors["white"]}
-                self.fork(node, fNode, None, info)
+                self.fork(node, fNode, None, None)
                 #no need to compute features & collect features for parent
                 return fNode
             elif tagName == "head":
-                attrs = self.driver.execute_script(self.vars.nodeAttributesJs,
+                attrs = self.driver.execute_script(self.comVars.nodeAttributesJs,
                                                    node)
                 # always parent at html(root)
                 fNode = self.head = Tag(tagName = tagName, attrs = attrs, 
@@ -191,7 +192,7 @@ class FeaturesTree():
                 #no need to compute features & collect features for parent
                 return fNode
             elif tagName == "title" or tagName == "base" or tagName == "meta": 
-                attrs = self.driver.execute_script(self.vars.nodeAttributesJs,
+                attrs = self.driver.execute_script(self.comVars.nodeAttributesJs,
                                                     node)
                 # always point these tags' parent at head
                 fNode = Tag(tagName = tagName, attrs = attrs, 
@@ -199,7 +200,7 @@ class FeaturesTree():
                 self.fork(node, fNode, None, None)
                 #no need to compute features & collect features for parent
                 return fNode
-            # other tags
+            # FeaturesTags, have features
             else:
                 fNode = FeaturesTag(tagName=tagName, parent=fParent)
                 # children features collector
@@ -208,7 +209,7 @@ class FeaturesTree():
                 '''
                 collector = {"n_char": 0, "n_node": 0, "n_tag": 0, "n_link": 0,
                              "n_link_char": 0, "DS": 0, 
-                             "color": self.vars.colors.fromkeys(self.vars.colors,
+                             "color": self.comVars.colors.fromkeys(self.comVars.colors,
                                                                  0)}
                 # current node informations
                 '''
@@ -216,7 +217,7 @@ class FeaturesTree():
                 can be treat as pre-collect the node's features.
                 '''
                 info = {"colorName": self.getSelfColorName(node), 
-                        "backgroundColor": self.getBackgroundColor(node, pInfo)}
+                        "backgroundColor": self.getBackgroundColor(pInfo, node)}
                 self.fork(node, fNode, collector, info)
                 self.computeFeatures(node, fNode, collector, info)
         # (for text node & nodes in <body>) collect features for parent        
@@ -227,7 +228,7 @@ class FeaturesTree():
     def fork(self, node, fNode, collector, info):
         # extract every child by JavaScript (include text node)   
         threads = [] # child threads
-        for nChild in self.driver.execute_script(self.vars.childNodesJs, node):
+        for nChild in self.driver.execute_script(self.comVars.childNodesJs, node):
             # compute the children of f_child features                
             fChild_thread = threading.Thread(target=self.DFT,
                                              args=(nChild, fNode, collector,
@@ -251,25 +252,27 @@ class FeaturesTree():
     
     # collect features for parent's children features collector
     def collect(self, fNode, pCollector, pInfo, collector):        
-        ########################################################################adding CSS value (|background) & threaded
-        if pCollector:  # if not None
+        try:  # if not None
             pCollector["n_char"] += fNode.DOM_features["n_char"]
             pCollector["n_node"] += fNode.DOM_features["n_node"]
             pCollector["n_tag"] += fNode.DOM_features["n_tag"]
             pCollector["n_link"] += fNode.DOM_features["n_link"]
             pCollector["n_link_char"] += fNode.DOM_features["n_link_char"]
             # text node doesn't have some properties
-            if type(node) is str:
+            if fNode.type == Type.FEATURES_TEXT:
                 pCollector["DS"] += 0
-                pCollector["color"][pInfo["color"]] += fNode.DOM_features["n_char"]
+                pCollector["color"][pInfo["colorName"]] += fNode.DOM_features["n_char"]
                 # skip background color
             else:# element node
                 pCollector["DS"] += fNode.DOM_derive_features["TD"]
                 #current node's color feature's (array) "values" == collector["color"] (dict)
                 pCollector["color"] = addDict(pCollector["color"], 
                                               collector["color"])
-                pCollector["backgroundColor"] = addDict(pCollector["backgroundColor"], 
-                                                        collector["backgroundColor"])
+        except TypeError as err:
+            if self.debug:
+                print("@collect, parent:%s, node:%s\nError:%s" % (
+                    getattr(fNode.parent, "tagName", "None"), 
+                    getattr(fNode, "tagName", "TEXT_NODE"), err))
         
     # compute element node DOM features
     ############################################################################ add tag name properties
@@ -291,18 +294,18 @@ class FeaturesTree():
         fNode.DOM_derive_features["TD"] = Ci / Ti
         fNode.DOM_derive_features["TaD"] = Ti / (Ci + 1)
         fNode.DOM_derive_features["LD"] = LTi / (Ti + 1)
+        '''
         # temporary not used, cause require LCb & Cb under the body element node
-        #LCi = fNode.DOM_features["n_link_char"]
-        # nLCi = n_char - LCi## non-link characters under node i
-        #fNode.DOM_derive_features["CTD"] = (n_char/Ti)*log((n_char*Ti/LCi*LTi),log(n_char*LCi/nLCi+LCb*n_char/Cb+exp(1)))
+        LCi = fNode.DOM_features["n_link_char"]
+        nLCi = n_char - LCi# #non-link characters under node i
+        fNode.DOM_derive_features["CTD"] = (n_char/Ti)*log((n_char*Ti/LCi*LTi),log(n_char*LCi/nLCi+LCb*n_char/Cb+exp(1)))
+        '''
         fNode.DOM_derive_features["DS"] = collector["DS"]
 
-    ############################################################################ get properties first then make features computation treaded
-    ############################################################################ combine children/descendant's features
     def computeCSSFeatures(self, node, fNode, collector, info):
         tmp = {}
         # displayed background color
-        tmp["backgroundColor"] = info["backgroundColor"]
+        fNode.CSS_features["backgroundColor"] = info["backgroundColor"]
         tmp["borderTopWidth"] = node.value_of_css_property("border-top-width")
         tmp["borderRightWidth"] = node.value_of_css_property("border-right-width")
         tmp["borderBottomWidth"] = node.value_of_css_property("border-bottom-width")
@@ -320,29 +323,30 @@ class FeaturesTree():
         tmp["paddingBottom"] = node.value_of_css_property("padding-bottom")
         tmp["paddingLeft"] = node.value_of_css_property("padding-left")
         tmp["rect"] = node.rect
-        tmp["show"] = node.node.is_displayed()
-        
-        
+        tmp["show"] = node.is_displayed()
+                
         threads = []
-        tBackgroundColor = 
-        tColor = threading.Thread(target=self.getColor,
-                                      args=(node, fNode, collector, info,))
-        tLineHeight = threading.Thread(target=self.getLineHeight,
-                                      args=(node, fNode, collector, info,))
-        '''
-        self.getColor(fNode, collector, True)
-        getFunc = [self.getLineHeight, self.getFontFamily, 
-                    self.getBorderWidth, self.getMargin, self.getPadding,
-                    self.getGeometric, self.getDisplay, self.getShow]
-        self.getBackgroundColor(fNode, info, collector, True)
-        threads = []
-        '''
+        # (displayed) background color has been done
+        funcs = [self.getBorderWidth, self.getDisplay, self.getFontFamily,
+                 self.getGeometric, self.getLineHeight, self.getMargin,
+                 self.getPadding, self.getShow]
+        for f in funcs:
+            t = threading.Thread(target=f, args=(fNode, tmp,))
+            t.start()
+            threads.append(t)
+        # getColor method take "collector" as argument
+        tColor = threading.Thread(target=self.getColor, args=(fNode, collector,))
+        tColor.start()
+        threads.append(tColor)
+        # join
+        for t in threads:
+            t.join()
        
     # just get current node's color
     def getSelfColorName(self, node):
         rgba = [float(x[0]) for x in re.findall(
-            self.vars.num_re, node.value_of_css_property('color'))]
-        distances = {k: manhattan(v, rgba) for k, v in self.vars.colors.items()}
+            self.comVars.num_re, node.value_of_css_property('color'))]
+        distances = {k: manhattan(v, rgba) for k, v in self.comVars.colors.items()}
         #return color name
         return min(distances, key=distances.get)
     
@@ -350,19 +354,19 @@ class FeaturesTree():
     def getBackgroundColor(self, pInfo, node):
         try:
             rgba = [float(x[0]) for x in re.findall(
-                    self.vars.num_re, node.value_of_css_property('background-color'))]
+                    self.comVars.num_re, node.value_of_css_property('background-color'))]
             return alphaBlending(rgba, pInfo["backgroundColor"])
         except TypeError as err:
             if self.debug:
-                print("@getSelfDisplayBackgroundColor, node:%s, value:%s\nError msg:" % (
+                print("@getSelfDisplayBackgroundColor, node:%s, pInfo:%s\nError:%s" % (
                     node.tag_name, pInfo, err))
-            return alphaBlending(rgba, self.vars.colors["white"])
+            return alphaBlending(rgba, self.comVars.colors["white"])
     
     def getBorderWidth(self, fNode, tmp):
-        bw_top = float(re.sub(self.vars.length_re, "", tmp["borderTopWidth"]))
-        bw_right = float(re.sub(self.vars.length_re, "", tmp["borderRightWidth"]))
-        bw_bottom = float(re.sub(self.vars.length_re, "", tmp["borderBottomWidth"]))
-        bw_left = float(re.sub(self.vars.length_re, "", tmp["borderLeftWidth"]))
+        bw_top = float(re.sub(self.comVars.length_re, "", tmp["borderTopWidth"]))
+        bw_right = float(re.sub(self.comVars.length_re, "", tmp["borderRightWidth"]))
+        bw_bottom = float(re.sub(self.comVars.length_re, "", tmp["borderBottomWidth"]))
+        bw_left = float(re.sub(self.comVars.length_re, "", tmp["borderLeftWidth"]))
         fNode.CSS_features["borderWidth"] = [bw_top, bw_right, bw_bottom, bw_left]
         
     # get the char color statistic dict of current node 
@@ -376,7 +380,7 @@ class FeaturesTree():
 
     def getDisplay(self, fNode, tmp):    
         fNode.CSS_features["display"] = [1 if d == tmp["display"] else 0 
-                                         for d in self.vars.display_arr]
+                                         for d in self.comVars.display_arr]
 
     def getFontFamily(self, fNode, tmp):
         # font-family array
@@ -384,8 +388,7 @@ class FeaturesTree():
         to lower case, normalize white spaces, remove """, split in to array via 
         ","
         '''
-        ff_arr = re.split("\s*,\s*", re.sub("\"", "",
-                                            re.sub("\s+", " ", 
+        ff_arr = re.split("\s*,\s*", re.sub("\"", "", re.sub("\s+", " ", 
                                                    tmp["fontFamily"].lower())))
         ''' 
         whether the font present in font-family is in top N fonts list
@@ -394,7 +397,7 @@ class FeaturesTree():
         found = 0
         for a in ff_arr:
             f_arr = []  # top N fonts 1/0 array
-            for f in self.vars.fonts:
+            for f in self.comVars.fonts:
                 if a == f and found == 0:
                     found = 1
                     f_arr.append(1)
@@ -406,34 +409,35 @@ class FeaturesTree():
         general fonts 1/0 array, find which generic font in font-family is
         present. The last one in ff_arr is usually generic  font name
         '''
-        g_arr = [1 if g == ff_arr[-1] else 0 for g in self.vars.gfonts]
+        g_arr = [1 if g == ff_arr[-1] else 0 for g in self.comVars.gfonts]
         fNode.CSS_features["fontFamily"] = f_arr + g_arr
 
     def getGeometric(self, fNode, tmp):
         fNode.CSS_features["width"] = tmp["rect"]["width"]
         fNode.CSS_features["height"] = tmp["rect"]["height"]
         fNode.CSS_derive_features["area"] = tmp["rect"]["width"] * tmp["rect"]["height"]
-        fNode.CSS_derive_features["coordinate"] = [tmp["rect"]["x"], tmp["rect"]["y"]]
+        fNode.CSS_derive_features["coordinate"] = [tmp["rect"]["x"], 
+                                                   tmp["rect"]["y"]]
 
     def getLineHeight(self, fNode, tmp):
         t = tmp["lineHeight"]
         if t == "normal":
             fNode.CSS_features["lineHeight"] = 1.2
         else:
-            fNode.CSS_features["lineHeight"] = float(re.findall(self.vars.num_re, t)[0])
+            fNode.CSS_features["lineHeight"] = float(re.findall(self.comVars.num_re, t)[0])
 
     def getMargin(self, fNode, tmp):
-        mg_top = float(re.sub(self.vars.length_re, "", tmp["marginTopWidth"]))
-        mg_right = float(re.sub(self.vars.length_re, "", tmp["marginRightWidth"]))
-        mg_bottom = float(re.sub(self.vars.length_re, "", tmp["marginBottomWidth"]))
-        mg_left = float(re.sub(self.vars.length_re, "", tmp["marginLeftWidth"]))
+        mg_top = float(re.sub(self.comVars.length_re, "", tmp["marginTop"]))
+        mg_right = float(re.sub(self.comVars.length_re, "", tmp["marginRight"]))
+        mg_bottom = float(re.sub(self.comVars.length_re, "", tmp["marginBottom"]))
+        mg_left = float(re.sub(self.comVars.length_re, "", tmp["marginLeft"]))
         fNode.CSS_features["margin"] = [mg_top, mg_right, mg_bottom, mg_left]
 
     def getPadding(self, fNode, tmp):
-        pd_top = float(re.sub(self.vars.length_re, "", tmp["paddingTopWidth"]))
-        pd_right = float(re.sub(self.vars.length_re, "", tmp["paddingRightWidth"]))
-        pd_bottom = float(re.sub(self.vars.length_re, "", tmp["paddingBottomWidth"]))
-        pd_left = float(re.sub(self.vars.length_re, "", tmp["paddingLeftWidth"]))
+        pd_top = float(re.sub(self.comVars.length_re, "", tmp["paddingTop"]))
+        pd_right = float(re.sub(self.comVars.length_re, "", tmp["paddingRight"]))
+        pd_bottom = float(re.sub(self.comVars.length_re, "", tmp["paddingBottom"]))
+        pd_left = float(re.sub(self.comVars.length_re, "", tmp["paddingLeft"]))
         fNode.CSS_features["padding"] = [pd_top, pd_right, pd_bottom, pd_left]
         
     #show = webelement.is_displaed()
@@ -464,4 +468,4 @@ def addDict(x, y):
     if len(x) != len(y):
         raise ValueError("Dict dimension inconsistent:", len(x), len(y), x, y)
     else:
-        return {k1: v1 + v2 for (k1, v1), (k2, v2) in zip(x.items(), y.items())}
+        return {k1: v1 + v2 for (k1, v1), v2 in zip(x.items(), y.values())}
