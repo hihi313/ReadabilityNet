@@ -18,7 +18,8 @@ class LCSLabeler():
         tmp_matches = 0
         tmp_nChar = 0       
         for Cnode in node.children:
-        ############################################primitive may need to be declare as constant################################################## 
+        ########################################################################primitive may need to be declare as constant
+        ######################################################################## delete "compared" (long) text to prevent short word in boilerplate marked as content
             if Cnode.name == "String":#for text node
                 Cnode_thread = threading.Thread(target = self.compare, args = (Cnode,))
             else:#for element node
@@ -47,7 +48,6 @@ class LCSLabeler():
             node.matches = self.LCS(txt)
         #similarity
         node.similarity = node.matches/node.DOM_features["n_char"] if node.DOM_features["n_char"] != 0 else node.matches
-################################ change to edit distance ? ####################################
     def LCS(self, txt):
         m = len(self.gold_standard)
         n = len(txt)
