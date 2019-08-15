@@ -209,8 +209,8 @@ class FeaturesTree():
                 '''
                 collector = {"n_char": 0, "n_node": 0, "n_tag": 0, "n_link": 0,
                              "n_link_char": 0, "DS": 0, 
-                             "color": self.comVars.colors.fromkeys(self.comVars.colors,
-                                                                 0)}
+                             "color": self.comVars.colors.fromkeys(
+                                                        self.comVars.colors, 0)}
                 # current node informations
                 '''
                 some children's features need to take parent's features consider.
@@ -242,7 +242,7 @@ class FeaturesTree():
         # compute current element node's features,
         # combine current node's features & children's features
         dom_thread = threading.Thread(target=self.computeDOMFeatures,
-                                      args=(fNode, collector,))
+                                      args=(node, fNode, collector,))
         css_thread = threading.Thread(target=self.computeCSSFeatures,
                                       args=(node, fNode, collector, info,))
         dom_thread.start()
@@ -275,8 +275,16 @@ class FeaturesTree():
                     getattr(fNode, "tagName", "TEXT_NODE"), err))
         
     # compute element node DOM features
-    ############################################################################ add tag name properties
-    def computeDOMFeatures(self, fNode, collector):
+    def computeDOMFeatures(self, node, fNode, collector):
+        '''            
+        div that contain no block element
+        search/score <tag>, class, id by keyword
+        dom level/depth of a node
+        # image
+        '''
+        tmp = {}
+        tmp["id"] = node.get_attribute("id")
+        tmp["class"] = node.get_attribute("class")
         # DOM features
         Ci = fNode.DOM_features["n_char"] = collector["n_char"]
         # current node are included
@@ -303,6 +311,10 @@ class FeaturesTree():
         fNode.DOM_derive_features["DS"] = collector["DS"]
 
     def computeCSSFeatures(self, node, fNode, collector, info):
+        '''
+        position, z=index, top, right, bottom , left
+        image size statistic
+        '''
         tmp = {}
         # displayed background color
         fNode.CSS_features["backgroundColor"] = info["backgroundColor"]

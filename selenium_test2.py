@@ -1,5 +1,4 @@
 import datetime
-import csv
 from os import listdir
 from os.path import isfile, join
 
@@ -14,7 +13,7 @@ if __name__ == '__main__':
     #path = "D:/Downloads/dragnet_data-master/HTML"
     #files = [f for f in listdir(path) if isfile(join(path, f))]
     # read previous session
-    with open("D:/Downloads/browserSession.txt", "r") as f:
+    with open("./browserSession.txt", "r") as f:
         executor_url = f.readline()
         session_id = f.readline()
         f.close()
@@ -34,7 +33,7 @@ if __name__ == '__main__':
     driver.get("file:///D:/Downloads/dragnet_data-master/HTML/test.html")
     print(driver.current_url)    
     # initialize & get common used variables
-    vars = ft.CommonVars("D:\\Downloads\\top_100_fonts_lowercase.csv", 
+    vars = ft.CommonVars("./top_100_fonts_lowercase.csv", 
                          "./returnChildNodes.js", 
                          "./returnNodeAttributes.js")
     # start parsing
