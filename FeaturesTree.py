@@ -47,6 +47,7 @@ class CommonVars():
                        "fantasy", "system-ui", "emoji", "math", "fangsong"]
         # top N fonts
         self.Nfonts = 42
+        ######################################################################## has repeated font name
         self.fonts = [f for f in font_list[:self.Nfonts]
                       if f not in self.gfonts]
         # display property value array
@@ -56,7 +57,9 @@ class CommonVars():
                             "table-caption", "table-column-group",
                             "table-header-group", "table-footer-group",
                             "table-row-group", "table-cell", "table-column",
-                            "table-rownone"]
+                            "table-row"]
+        # position property array
+        self.position_arr = ["static", "absolute", "fixed", "relative", "sticky"]
 
 # element node
 class FeaturesTag(NodeMixin):
@@ -92,10 +95,13 @@ class FeaturesTag(NodeMixin):
                              "fontFamily": None, "borderWidth": None,
                              "margin": None, "padding": None, "width": None,
                              "height": None, "backgroundColor": None,
-                             "display": None}
+                             "display": None, "position": None, "zIndex": None}
         # CSS derive features
-        self.CSS_derive_features = {"area": None, "coordinate": None,
-                                    "show": None}
+        '''
+        x = left, y = top
+        '''
+        self.CSS_derive_features = {"area": None, "x": None, "y": None,
+                                    "right": None, "bottom": None, "show": None}
 
 # text node
 class FeaturesText(NodeMixin):
@@ -150,6 +156,7 @@ class Tag(NodeMixin):
 class FeaturesTree():
     def __init__(self, driver, comVars, debug = False):
         self.driver = driver  # used to execute Javascript
+        self.url = driver.current_url # used for debug, store the source page
         self.comVars = comVars # common used variables
         self.root = None # root of FeaturesTree
         self.html = None # root of document
@@ -173,11 +180,17 @@ class FeaturesTree():
             tagName = node.tag_name
             # Tags, have no features, preserve attributes
             if tagName == "html":
-                attrs = self.driver.execute_script(self.comVars.nodeAttributesJs,
-                                                   node)
+                ''' last argument set to True, in order to get the viewport size
+                of the current html document which is rendered.
+                And store in the html node, as an information
+                '''
+                result = self.driver.execute_script(self.comVars.nodeAttributesJs,
+                                                   node, True,)
                 # always root
-                fNode = self.root = Tag(tagName = tagName, attrs = attrs, 
+                fNode = self.root = Tag(tagName = tagName, attrs = result[0], 
                                         parent = None)
+                # store the viewport size
+                fNode.dimension = result[1]
                 # force setting background as white
                 self.fork(node, fNode, None, None)
                 #no need to compute features & collect features for parent
@@ -270,7 +283,8 @@ class FeaturesTree():
                                               collector["color"])
         except TypeError as err:
             if self.debug:
-                print("@collect, parent:%s, node:%s\nError:%s" % (
+                print("@collect, src:%s, parent:%s, node:%s\nError:%s" % (
+                    self.url,
                     getattr(fNode.parent, "tagName", "None"), 
                     getattr(fNode, "tagName", "TEXT_NODE"), err))
         
@@ -312,7 +326,7 @@ class FeaturesTree():
 
     def computeCSSFeatures(self, node, fNode, collector, info):
         '''
-        position, z=index, top, right, bottom , left
+        , z=index, 
         image size statistic
         '''
         tmp = {}
@@ -334,14 +348,17 @@ class FeaturesTree():
         tmp["paddingRight"] = node.value_of_css_property("padding-right")
         tmp["paddingBottom"] = node.value_of_css_property("padding-bottom")
         tmp["paddingLeft"] = node.value_of_css_property("padding-left")
+        tmp["position"] = node.value_of_css_property("position")
         tmp["rect"] = node.rect
         tmp["show"] = node.is_displayed()
+        # zIndex no need to convert
+        tmp["zIndex"] = node.value_of_css_property("z-index")
                 
         threads = []
         # (displayed) background color has been done
         funcs = [self.getBorderWidth, self.getDisplay, self.getFontFamily,
                  self.getGeometric, self.getLineHeight, self.getMargin,
-                 self.getPadding, self.getShow]
+                 self.getPadding, self.getPosition, self.getShow]
         for f in funcs:
             t = threading.Thread(target=f, args=(fNode, tmp,))
             t.start()
@@ -370,8 +387,10 @@ class FeaturesTree():
             return alphaBlending(rgba, pInfo["backgroundColor"])
         except TypeError as err:
             if self.debug:
-                print("@getSelfDisplayBackgroundColor, node:%s, pInfo:%s\nError:%s" % (
-                    node.tag_name, pInfo, err))
+                print("@getSelfDisplayBackgroundColor, src:%s, parent:%s, node:%s, pInfo:%s\nError:%s" % (
+                    self.url,
+                    getattr(node.parent, "tag_name", "None"), 
+                    getattr(node, "tag_name", "TEXT_NODE"), pInfo, err))
             return alphaBlending(rgba, self.comVars.colors["white"])
     
     def getBorderWidth(self, fNode, tmp):
@@ -428,8 +447,12 @@ class FeaturesTree():
         fNode.CSS_features["width"] = tmp["rect"]["width"]
         fNode.CSS_features["height"] = tmp["rect"]["height"]
         fNode.CSS_derive_features["area"] = tmp["rect"]["width"] * tmp["rect"]["height"]
-        fNode.CSS_derive_features["coordinate"] = [tmp["rect"]["x"], 
-                                                   tmp["rect"]["y"]]
+        fNode.CSS_derive_features["x"] = tmp["rect"]["x"]
+        fNode.CSS_derive_features["y"] = tmp["rect"]["y"]
+        # dimension[1] = width
+        fNode.CSS_derive_features["right"] = self.root.dimension[1] - tmp["rect"]["x"] - tmp["rect"]["width"]
+        # dimension[0] = height
+        fNode.CSS_derive_features["bottom"] = self.root.dimension[0] - tmp["rect"]["y"] - tmp["rect"]["height"]
 
     def getLineHeight(self, fNode, tmp):
         t = tmp["lineHeight"]
@@ -451,10 +474,21 @@ class FeaturesTree():
         pd_bottom = float(re.sub(self.comVars.length_re, "", tmp["paddingBottom"]))
         pd_left = float(re.sub(self.comVars.length_re, "", tmp["paddingLeft"]))
         fNode.CSS_features["padding"] = [pd_top, pd_right, pd_bottom, pd_left]
-        
+
+    def getPosition(self, fNode, tmp):
+        fNode.CSS_features["position"] = [1 if a == tmp["position"] else 0
+                                          for a in self.comVars.position_arr]
+
     #show = webelement.is_displaed()
     def getShow(self, fNode, tmp):        
         fNode.CSS_derive_features["show"] = 1 if tmp["show"] else 0
+            
+    def getZindex(self, fNode, tmp):
+        if tmp["zIndex"] == "auto":
+            # set the default value of z-index
+            fNode.CSS_features["zIndex"] = 0  
+        else:
+            fNode.CSS_features["zIndex"] = int(tmp["zIndex"])
     
     def printTree(self, root):
         for pre, _, node in RenderTree(root):
