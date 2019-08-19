@@ -16,8 +16,11 @@ try{
 							  html.clientWidth, html.scrollWidth, 
 							  html.offsetWidth );
 		viewport = [height, width];
+		return [attrs, viewport];
+	} else {
+		return attrs;
 	}
-	return [attrs, viewport];
+	
 }catch(err){
 	// second argument not present
 	return attrs;

@@ -37,8 +37,10 @@ if __name__ == '__main__':
                          "./returnChildNodes.js", 
                          "./returnNodeAttributes.js")
     # start parsing
+    debug = True
+    print("debug mode:%s" % debug)
     str_cvrt = datetime.datetime.now()
-    ftree = ft.FeaturesTree(driver, vars, debug = True)
+    ftree = ft.FeaturesTree(driver, vars, debug = debug)
     html = driver.find_element_by_tag_name("html")
     root = ftree.DFT_driver(html)
     #print as tree format

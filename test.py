@@ -38,7 +38,7 @@ class CommonVars():
         self.gfonts = ["serif", "sans-serif", "monospace", "cursive",
                        "fantasy", "system-ui", "emoji", "math", "fangsong"]
         # top N fonts
-        self.Nfonts = 42
+        self.Nfonts = 100
         self.fonts = [f for f in font_list[:self.Nfonts]
                       if f not in self.gfonts]
         # display property value array
@@ -53,11 +53,11 @@ class CommonVars():
 com = CommonVars("./top_100_fonts_lowercase.csv", 
                          "./returnChildNodes.js", 
                          "./returnNodeAttributes.js")
-'''
+
 # using dict is not faster
-times = 1000
+times = 100000
 ffArr = ["arial black", "times new roman", "arial"]
-fd = OrderedDict(zip(com.fonts, [None]*len(com.fonts)))
+fd = OrderedDict(zip(com.fonts, [0]*len(com.fonts)))
 fd2 = fd.fromkeys(fd, 0)
 fonts = list(fd.keys())
 print(len(com.fonts))
@@ -80,12 +80,12 @@ print(end-str)
 print(f_arr)
 print(len(f_arr))
 
-od = OrderedDict(zip(com.display_arr, [None]*len(com.display_arr)))
+od = OrderedDict(zip(com.display_arr, [0]*len(com.display_arr)))
 od2 = od.fromkeys(od, 0)
 str2 = datetime.datetime.now()  
 for i in range(times):  
-    fd.fromkeys(fd, 0)
-    od.fromkeys(od, 0)
+    fd.copy()
+    od.copy()
     #tmp = None  
     for a in ffArr:        
         try:
@@ -103,7 +103,3 @@ end2 = datetime.datetime.now()
 print(end2-str2)
 print(list(fd2.values()))
 print(len(fd2))
- '''
- 
-com.a = "sdf"
-print(com.a)

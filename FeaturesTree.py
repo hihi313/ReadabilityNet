@@ -29,8 +29,11 @@ class CommonVars():
         self.length_re = "px"
         # colors
         ''' 
-        need to be ordered, in oder to convert to array, the dict keys are 
-        used to identify the color/give the color a name
+        Using dict to speed up the comparison/finding time.
+        And using OrderedDict to preserve order (& for compatability below 
+        python 3.6).
+        In oder to convert to array, the dict keys are used to identify the 
+        color/give the color a name.
         '''
         self.colors = OrderedDict()
         self.colors["red"] = (255, 0, 0, 1)  # red
@@ -45,21 +48,59 @@ class CommonVars():
         # general fonts
         self.gfonts = ["serif", "sans-serif", "monospace", "cursive",
                        "fantasy", "system-ui", "emoji", "math", "fangsong"]
+        '''
+        In order to shorten the declaration of OrderedDict, so using 
+        (key, value) pair list
+        '''
         # top N fonts
         self.Nfonts = 42
-        ######################################################################## has repeated font name
         self.fonts = [f for f in font_list[:self.Nfonts]
                       if f not in self.gfonts]
         # display property value array
-        self.display_arr = ["inline", "block", "contents", "flex", "grid",
-                            "inline-block", "inline-flex", "inline-grid",
-                            "inline-table", "list-item", "table",
-                            "table-caption", "table-column-group",
-                            "table-header-group", "table-footer-group",
-                            "table-row-group", "table-cell", "table-column",
-                            "table-row"]
+        self.display_arr = ["block", "contents", "flex", "grid", "inline", 
+                            "inline-block", "inline-flex", "inline-grid", 
+                            "inline-table", "list-item", "table", 
+                            "table-caption", "table-cell", "table-column", 
+                            "table-column-group", "table-footer-group", 
+                            "table-header-group", "table-row", "table-row-group"]
         # position property array
         self.position_arr = ["static", "absolute", "fixed", "relative", "sticky"]
+        ######################################################################## convert above list to ordered dict
+        '''
+        The value of dict is not important
+        '''
+        # positive tag name
+        posTag_arr = [("article", 0), ("blockquote", 0), ("body", 0), 
+                           ("div", 0), ("main", 0), ("post", 0), ("pre", 0), 
+                           ("td", 0)]
+        self.posTag = OrderedDict(posTag_arr)
+        # positive tag name
+        negTag_arr = [("address", 0), ("aside", 0), ("dd", 0), ("dl", 0), 
+                           ("dt", 0), ("footer", 0), ("form", 0), ("li", 0), 
+                           ("nav", 0), ("ol", 0), ("th", 0), ("ul", 0)]
+        self.negTag = OrderedDict(negTag_arr)
+        # positive class, id attribute value
+        posAttr_arr = [("and", 0), ("article", 0), ("blockquote", 0), 
+                       ("blog", 0), ("body", 0), ("column", 0), ("content", 0), 
+                       ("div", 0), ("entry", 0), ("hentry", 0), ("main", 0), 
+                       ("page", 0), ("post", 0), ("pre", 0), ("shadow", 0), 
+                       ("story", 0), ("td", 0), ("text", 0)]
+        self.posAttr = OrderedDict(posAttr_arr)    
+        # negative class, id attribute value
+        negAttr_arr = [("ad-break", 0), ("address", 0), ("agegate", 0), 
+                       ("aside", 0), ("com-", 0), ("combx", 0), ("comment", 0), 
+                       ("community", 0), ("contact", 0), ("dd", 0), 
+                       ("disqus", 0), ("dl", 0), ("dt", 0), ("extra", 0), 
+                       ("footer", 0), ("footnote", 0), ("form", 0), ("li", 0), 
+                       ("masthead", 0), ("media", 0), ("menu", 0), ("meta", 0), 
+                       ("nav", 0), ("ol", 0), ("outbrain", 0), ("pager", 0), 
+                       ("pagination", 0), ("popup", 0), ("promo", 0), 
+                       ("related", 0), ("remark", 0), ("rss", 0), ("scroll", 0), 
+                       ("shopping", 0), ("shoutbox", 0), ("sidebar", 0), 
+                       ("sponsor", 0), ("tags", 0), ("th", 0), ("tool", 0), 
+                       ("tweet", 0), ("twitter", 0), ("ul", 0), ("widget", 0)]
+        self.negAttr = OrderedDict(negAttr_arr)
+        
 
 # element node
 class FeaturesTag(NodeMixin):
@@ -77,9 +118,15 @@ class FeaturesTag(NodeMixin):
         ''' 
         # character, # node, # tag, # link, # link's character under the node
         (inclusive)
+        in order to shorten the input features & input layer, posTag, negTag, 
+        posAttr, negAttr change to "point"( != "score")
         '''
+        ######################################################################## dict may need to convert to ordered dict to preserve order for earlier python vision
+        ######################################################################## all dict features may need to convert to list/array 
         self.DOM_features = {"n_char": None, "n_node": None, "n_tag": None,
-                             "n_link": None, "n_link_char": None}
+                             "n_link": None, "n_link_char": None, 
+                             "posTagPoint": None, "negTagPoint": None, 
+                             "posAttrPoint": None, "negAttrPoint": None }
         # DOM derive features
         '''
         # Char-Node ratio, Text Density, Tag Density, Link Density, 
@@ -291,6 +338,7 @@ class FeaturesTree():
     # compute element node DOM features
     def computeDOMFeatures(self, node, fNode, collector):
         '''            
+        ######################################################################## To-do features:
         div that contain no block element
         search/score <tag>, class, id by keyword
         dom level/depth of a node
@@ -326,7 +374,7 @@ class FeaturesTree():
 
     def computeCSSFeatures(self, node, fNode, collector, info):
         '''
-        , z=index, 
+        ######################################################################## To-do features:
         image size statistic
         '''
         tmp = {}
