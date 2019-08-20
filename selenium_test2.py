@@ -30,14 +30,14 @@ if __name__ == '__main__':
     print(driver.command_executor._url)
     print(driver.session_id)
     # get webpage
-    driver.get("file:///D:/Downloads/dragnet_data-master/HTML/test.html")
+    driver.get("file:///D:/Downloads/dragnet_data-master/HTML/R249.html")
     print(driver.current_url)    
     # initialize & get common used variables
     vars = ft.CommonVars("./top_100_fonts_lowercase.csv", 
                          "./returnChildNodes.js", 
                          "./returnNodeAttributes.js")
     # start parsing
-    debug = True
+    debug = False
     print("debug mode:%s" % debug)
     str_cvrt = datetime.datetime.now()
     ftree = ft.FeaturesTree(driver, vars, debug = debug)

@@ -54,8 +54,7 @@ com = CommonVars("./top_100_fonts_lowercase.csv",
                          "./returnChildNodes.js", 
                          "./returnNodeAttributes.js")
 
-# using dict is not faster
-times = 100000
+times = 10000
 ffArr = ["arial black", "times new roman", "arial"]
 fd = OrderedDict(zip(com.fonts, [0]*len(com.fonts)))
 fd2 = fd.fromkeys(fd, 0)
@@ -94,11 +93,9 @@ for i in range(times):
             break
         except KeyError:
             pass
-    fd2.values()
-    fd2[a] = 0
     od2["table-rownone"]=1
-    od2.values()
-    od2["table-rownone"] = 0
+    list(fd.values())+list(od.values())
+    
 end2 = datetime.datetime.now()  
 print(end2-str2)
 print(list(fd2.values()))

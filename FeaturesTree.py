@@ -1,6 +1,8 @@
 from anytree import NodeMixin, RenderTree
 from collections import OrderedDict
 import re, threading, csv
+from numpy.lib.function_base import disp
+from _collections import OrderedDict
 #from math import log, exp
 
 # node type
@@ -45,39 +47,46 @@ class CommonVars():
         self.colors["black"] = (0, 0, 0, 1) # black
         self.colors["gray"] = (128, 128, 128, 1) # gray
         self.colors["white"] = (255, 255, 255, 1) # white
-        # general fonts
-        self.gfonts = ["serif", "sans-serif", "monospace", "cursive",
-                       "fantasy", "system-ui", "emoji", "math", "fangsong"]
         '''
         In order to shorten the declaration of OrderedDict, so using 
         (key, value) pair list
         '''
+        # general fonts
+        gfonts_arr = [("serif", 0), ("sans-serif", 0), ("monospace", 0), 
+                       ("cursive", 0), ("fantasy", 0), ("system-ui", 0), 
+                       ("emoji", 0), ("math", 0), ("fangsong", 0)]
+        self.gfonts = OrderedDict(gfonts_arr)        
         # top N fonts
         self.Nfonts = 42
-        self.fonts = [f for f in font_list[:self.Nfonts]
+        fonts_arr = [(f, 0) for f in font_list[:self.Nfonts]
                       if f not in self.gfonts]
+        self.fonts = OrderedDict(fonts_arr)
         # display property value array
-        self.display_arr = ["block", "contents", "flex", "grid", "inline", 
-                            "inline-block", "inline-flex", "inline-grid", 
-                            "inline-table", "list-item", "table", 
-                            "table-caption", "table-cell", "table-column", 
-                            "table-column-group", "table-footer-group", 
-                            "table-header-group", "table-row", "table-row-group"]
+        display_arr = [("block", 0), ("contents", 0), ("flex", 0), 
+                        ("grid", 0), ("inline", 0), ("inline-block", 0), 
+                        ("inline-flex", 0), ("inline-grid", 0), 
+                        ("inline-table", 0), ("list-item", 0), ("table", 0), 
+                        ("table-caption", 0), ("table-cell", 0), 
+                        ("table-column", 0), ("table-column-group", 0), 
+                        ("table-footer-group", 0), ("table-header-group", 0), 
+                        ("table-row", 0), ("table-row-group", 0)]
+        self.display = OrderedDict(display_arr)
         # position property array
-        self.position_arr = ["static", "absolute", "fixed", "relative", "sticky"]
-        ######################################################################## convert above list to ordered dict
+        position_arr = [("static", 0), ("absolute", 0), ("fixed", 0), 
+                         ("relative", 0), ("sticky", 0)]
+        self.position = OrderedDict(position_arr)
         '''
-        The value of dict is not important
+        The value of (below) dict is not important
         '''
         # positive tag name
         posTag_arr = [("article", 0), ("blockquote", 0), ("body", 0), 
-                           ("div", 0), ("main", 0), ("post", 0), ("pre", 0), 
-                           ("td", 0)]
+                       ("div", 0), ("main", 0), ("post", 0), ("pre", 0), 
+                       ("td", 0)]
         self.posTag = OrderedDict(posTag_arr)
         # positive tag name
         negTag_arr = [("address", 0), ("aside", 0), ("dd", 0), ("dl", 0), 
-                           ("dt", 0), ("footer", 0), ("form", 0), ("li", 0), 
-                           ("nav", 0), ("ol", 0), ("th", 0), ("ul", 0)]
+                       ("dt", 0), ("footer", 0), ("form", 0), ("li", 0), 
+                       ("nav", 0), ("ol", 0), ("th", 0), ("ul", 0)]
         self.negTag = OrderedDict(negTag_arr)
         # positive class, id attribute value
         posAttr_arr = [("and", 0), ("article", 0), ("blockquote", 0), 
@@ -121,34 +130,40 @@ class FeaturesTag(NodeMixin):
         in order to shorten the input features & input layer, posTag, negTag, 
         posAttr, negAttr change to "point"( != "score")
         '''
-        ######################################################################## dict may need to convert to ordered dict to preserve order for earlier python vision
-        ######################################################################## all dict features may need to convert to list/array 
-        self.DOM_features = {"n_char": None, "n_node": None, "n_tag": None,
-                             "n_link": None, "n_link_char": None, 
-                             "posTagPoint": None, "negTagPoint": None, 
-                             "posAttrPoint": None, "negAttrPoint": None }
+        self.DOM_features = OrderedDict([("n_char", None), ("n_node", None), 
+                                         ("n_tag", None), ("n_link", None), 
+                                         ("n_link_char", None), 
+                                         ("posTagPoint", None), 
+                                         ("negTagPoint", None), 
+                                         ("posAttrPoint", None), 
+                                         ("negAttrPoint", None)])
         # DOM derive features
         '''
         # Char-Node ratio, Text Density, Tag Density, Link Density, 
         Composite Text Density, Density Sum, "None" means not set
         '''
-        self.DOM_derive_features = {"CNR": None, "TD": None, "TaD": None,
-                                    "LD": None, "CTD": None, "DS": None}
+        self.DOM_derive_features = OrderedDict([("CNR", None), ("TD", None), 
+                                                ("TaD", None),("LD", None), 
+                                                ("CTD", None), ("DS", None)])
         # CSS raw feature
         '''
         show = webelement.is_displayed()
+        Because of speed concern, split font feature into "fontFamily" & 
+        "generalFont" 
         '''
-        self.CSS_features = {"color": None, "lineHeight": None,
-                             "fontFamily": None, "borderWidth": None,
-                             "margin": None, "padding": None, "width": None,
-                             "height": None, "backgroundColor": None,
-                             "display": None, "position": None, "zIndex": None}
+        self.CSS_features = OrderedDict([("color", None), ("lineHeight", None), 
+                             ("fontFamily", None), ("borderWidth", None), 
+                             ("margin", None), ("padding", None), 
+                             ("width", None), ("height", None), 
+                             ("backgroundColor", None), ("display", None), 
+                             ("position", None), ("zIndex", None)])
         # CSS derive features
         '''
         x = left, y = top
         '''
-        self.CSS_derive_features = {"area": None, "x": None, "y": None,
-                                    "right": None, "bottom": None, "show": None}
+        self.CSS_derive_features = OrderedDict([("area", None), ("x", None), 
+                                                ("y", None), ("right", None), 
+                                                ("bottom", None), ("show", None)])
 
 # text node
 class FeaturesText(NodeMixin):
@@ -168,15 +183,17 @@ class FeaturesText(NodeMixin):
         # character, # node, # tag, # link, # link's character under the node
         (inclusive)
         '''
-        self.DOM_features = {"n_char": len(strValue), "n_node": 1, "n_tag": 0,
-                             "n_link": 0, "n_link_char": 0}
+        self.DOM_features = OrderedDict([("n_char", len(strValue)), 
+                                         ("n_node", 1), ("n_tag", 0), 
+                                         ("n_link", 0), ("n_link_char", 0)])
         # DOM derive features
         '''
         Text nodes are leaves node and non-tag element, thus Text nodes have no 
         TD, LD, CTD, "None" means not set   
         '''
-        self.DOM_derive_features = {"CNR": len(strValue), "TaD": 0, "LD": 0,
-                                    "CTD": None}
+        self.DOM_derive_features = OrderedDict([("CNR", len(strValue)), 
+                                                ("TaD", 0), ("LD", 0), 
+                                                ("CTD", None)])
 
 # for invisible node (tag not in body)
 '''
@@ -340,13 +357,16 @@ class FeaturesTree():
         '''            
         ######################################################################## To-do features:
         div that contain no block element
-        search/score <tag>, class, id by keyword
         dom level/depth of a node
         # image
         '''
         tmp = {}
         tmp["id"] = node.get_attribute("id")
         tmp["class"] = node.get_attribute("class")
+        tTag = threading.Thread(target=self.getTagPoint, args=(fNode,))
+        tAttr = threading.Thread(target=self.getAttrPoint, args=(fNode, tmp,))
+        tTag.start()
+        tAttr.start()
         # DOM features
         Ci = fNode.DOM_features["n_char"] = collector["n_char"]
         # current node are included
@@ -371,6 +391,31 @@ class FeaturesTree():
         fNode.DOM_derive_features["CTD"] = (n_char/Ti)*log((n_char*Ti/LCi*LTi),log(n_char*LCi/nLCi+LCb*n_char/Cb+exp(1)))
         '''
         fNode.DOM_derive_features["DS"] = collector["DS"]
+        
+        tTag.join()
+        tAttr.join()
+
+    def getTagPoint(self, fNode):
+        tagName = fNode.tagName
+        fNode.DOM_features["posTagPoint"] = 1 if tagName in self.comVars.posTag else 0
+        fNode.DOM_features["negTagPoint"] = 1 if tagName in self.comVars.negTag else 0
+        
+    def getAttrPoint(self, fNode, tmp):
+        nClass = re.split("\s+", tmp["class"].lower())
+        nId = re.sub("\s+[\s\S]*", '', tmp["id"].lower())
+        posPoint = 0
+        negPoint = 0
+        if nId in self.comVars.posAttr:
+            posPoint += 1
+        if nId in self.comVars.negAttr:
+            negPoint += 1
+        for c in nClass:
+            if c in self.comVars.posAttr:
+                posPoint += 1
+            if c in self.comVars.negAttr:
+                negPoint += 1        
+        fNode.DOM_features["posAttrPoint"] = posPoint
+        fNode.DOM_features["negAttrPoint"] = negPoint
 
     def computeCSSFeatures(self, node, fNode, collector, info):
         '''
@@ -406,7 +451,7 @@ class FeaturesTree():
         # (displayed) background color has been done
         funcs = [self.getBorderWidth, self.getDisplay, self.getFontFamily,
                  self.getGeometric, self.getLineHeight, self.getMargin,
-                 self.getPadding, self.getPosition, self.getShow]
+                 self.getPadding, self.getPosition, self.getShow, self.getZindex]
         for f in funcs:
             t = threading.Thread(target=f, args=(fNode, tmp,))
             t.start()
@@ -457,9 +502,13 @@ class FeaturesTree():
             #convert (ordered) dict to array                     
             fNode.CSS_features["color"] = [collector["color"][k] for k in collector["color"]]
 
-    def getDisplay(self, fNode, tmp):    
-        fNode.CSS_features["display"] = [1 if d == tmp["display"] else 0 
-                                         for d in self.comVars.display_arr]
+    def getDisplay(self, fNode, tmp):
+        d = self.comVars.display.copy()
+        try:
+            d[tmp["display"]] = 1
+        except KeyError:
+            pass
+        fNode.CSS_features["display"] = list(d.values())
 
     def getFontFamily(self, fNode, tmp):
         # font-family array
@@ -473,23 +522,23 @@ class FeaturesTree():
         whether the font present in font-family is in top N fonts list
         if match, ignore the rest(exclude the last(generic font))
         '''
-        found = 0
-        for a in ff_arr:
-            f_arr = []  # top N fonts 1/0 array
-            for f in self.comVars.fonts:
-                if a == f and found == 0:
-                    found = 1
-                    f_arr.append(1)
-                else:
-                    f_arr.append(0)
-            if found == 1:
+        fDict = self.comVars.fonts.copy()
+        for f in ff_arr:        
+            try:
+                fDict[f] = 1
                 break
+            except KeyError:
+                pass
         '''
         general fonts 1/0 array, find which generic font in font-family is
-        present. The last one in ff_arr is usually generic  font name
+        present. The last one in ff_arr is usually generic font name
         '''
-        g_arr = [1 if g == ff_arr[-1] else 0 for g in self.comVars.gfonts]
-        fNode.CSS_features["fontFamily"] = f_arr + g_arr
+        gfDict = self.comVars.gfonts.copy()
+        try:
+            gfDict[ff_arr[-1]] = 1
+        except KeyError:
+            pass
+        fNode.CSS_features["fontFamily"] = list(fDict.values()) + list(gfDict.values()) 
 
     def getGeometric(self, fNode, tmp):
         fNode.CSS_features["width"] = tmp["rect"]["width"]
@@ -524,8 +573,12 @@ class FeaturesTree():
         fNode.CSS_features["padding"] = [pd_top, pd_right, pd_bottom, pd_left]
 
     def getPosition(self, fNode, tmp):
-        fNode.CSS_features["position"] = [1 if a == tmp["position"] else 0
-                                          for a in self.comVars.position_arr]
+        p = self.comVars.position.copy()
+        try:
+            p[tmp["position"]] = 1
+        except KeyError:
+            pass
+        fNode.CSS_features["position"] = list(p.values())
 
     #show = webelement.is_displaed()
     def getShow(self, fNode, tmp):        
