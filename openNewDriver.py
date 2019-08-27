@@ -2,12 +2,13 @@ from selenium import webdriver
 
 if __name__ == '__main__':
     options = webdriver.ChromeOptions()
-    ############################################################################ need to set fixed windows size
     #options.add_argument("-headless")
+    options.add_argument("--window-position=0,0")
     driver = webdriver.Chrome(options = options)
     #set to offline
     driver.set_network_conditions(offline=True, latency=0, 
                                   throughput=1024 * 1024*1024)
+    driver.set_window_size(1920, 1080)
     driver.get("http://www.google.com")
     #save browser session
     executor_url = driver.command_executor._url

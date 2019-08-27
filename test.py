@@ -1,5 +1,5 @@
 from collections import OrderedDict
-import csv, datetime
+import csv, datetime, timeit
 from _ast import Try
 
 class CommonVars():
@@ -53,7 +53,8 @@ class CommonVars():
 com = CommonVars("./top_100_fonts_lowercase.csv", 
                          "./returnChildNodes.js", 
                          "./returnNodeAttributes.js")
-
+'''
+# using dict is a little bit faster
 times = 10000
 ffArr = ["arial black", "times new roman", "arial"]
 fd = OrderedDict(zip(com.fonts, [0]*len(com.fonts)))
@@ -100,3 +101,23 @@ end2 = datetime.datetime.now()
 print(end2-str2)
 print(list(fd2.values()))
 print(len(fd2))
+'''
+times = 1000000
+str = datetime.datetime.now()
+for j in range(times):
+    for n in range(9,-1,-1):
+        pass
+        #print(n, end = '')
+end = datetime.datetime.now()  
+print("\n", end-str)
+
+str2 = datetime.datetime.now()  
+for j in range(times):
+    for i in reversed(range(10)):
+        pass
+        #print(i, end = '')
+end2 = datetime.datetime.now()  
+print("\n", end2-str2)
+
+print(timeit.timeit('for i in reversed(range(10)):pass', number=times))
+print(timeit.timeit('for n in range(9,-1,-1):pass', number=times))

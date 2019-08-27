@@ -120,8 +120,6 @@ class FeaturesTag(NodeMixin):
         self.parent = parent
         if children:
             self.children = children
-        # label
-        self.label = None
         # features
         # DOM raw features, no need to compute
         ''' 
@@ -144,7 +142,7 @@ class FeaturesTag(NodeMixin):
         '''
         self.DOM_derive_features = OrderedDict([("CNR", None), ("TD", None), 
                                                 ("TaD", None),("LD", None), 
-                                                ("CTD", None), ("DS", None)])
+                                                ("DS", None)])
         # CSS raw feature
         '''
         show = webelement.is_displayed()
@@ -175,8 +173,6 @@ class FeaturesText(NodeMixin):
         self.parent = parent
         if children:
             self.children = children
-        # label
-        self.label = None
         # features
         # DOM raw features, no need to compute
         ''' 
@@ -192,8 +188,7 @@ class FeaturesText(NodeMixin):
         TD, LD, CTD, "None" means not set   
         '''
         self.DOM_derive_features = OrderedDict([("CNR", len(strValue)), 
-                                                ("TaD", 0), ("LD", 0), 
-                                                ("CTD", None)])
+                                                ("TaD", 0), ("LD", 0)])
 
 # for invisible node (tag not in body)
 '''
@@ -359,6 +354,7 @@ class FeaturesTree():
         div that contain no block element
         dom level/depth of a node
         # image
+        CTD (composite Text Density)
         '''
         tmp = {}
         tmp["id"] = node.get_attribute("id")
