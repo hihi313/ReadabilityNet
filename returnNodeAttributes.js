@@ -5,7 +5,8 @@ for (i = 0; i < arguments[0].attributes.length; ++i) {
 var viewport;
 try{
 	// second argument present
-	// if arguments[1] == true, return the viewport size
+	// if arguments[1] == true, return the viewport(webpage actual) size
+	// for the root node(html tag)
 	if(arguments[1]){
 		// get the total dimension of an element: https://stackoverflow.com/questions/1145850/how-to-get-height-of-entire-document-with-javascript
 		var body = document.body, html = document.documentElement;

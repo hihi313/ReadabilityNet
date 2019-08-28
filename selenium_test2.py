@@ -48,7 +48,8 @@ if __name__ == '__main__':
     # initialize & get common used variables
     com = ft.CommonVars("./top_100_fonts_lowercase.csv", 
                          "./returnChildNodes.js", 
-                         "./returnNodeAttributes.js")
+                         "./returnNodeAttributes.js",
+                         "./getComputedStyle.js")
     
     threads = [] # child threads
     shift = 5

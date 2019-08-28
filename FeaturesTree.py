@@ -13,7 +13,8 @@ class Type():
 
 # common used variables
 class CommonVars():
-    def __init__(self, fonts_lower_path, returnChildeNode_path, returnNodeAttrs_path):
+    def __init__(self, fonts_lower_path, returnChildeNode_path, 
+                 returnNodeAttrs_path, getComputedStyle_path):
         # open files
         # get top fonts & convert to array
         with open(fonts_lower_path, encoding="utf-8") as f:
@@ -23,6 +24,8 @@ class CommonVars():
         self.childNodesJs = open(returnChildeNode_path, "r",
                                   encoding="utf-8").read()
         self.nodeAttributesJs = open(returnNodeAttrs_path, "r",
+                                  encoding="utf-8").read()
+        self.getComputedStyleJs = open(getComputedStyle_path, "r",
                                   encoding="utf-8").read()
         # REGEX
         # number
@@ -108,8 +111,7 @@ class CommonVars():
                        ("shopping", 0), ("shoutbox", 0), ("sidebar", 0), 
                        ("sponsor", 0), ("tags", 0), ("th", 0), ("tool", 0), 
                        ("tweet", 0), ("twitter", 0), ("ul", 0), ("widget", 0)]
-        self.negAttr = OrderedDict(negAttr_arr)
-        
+        self.negAttr = OrderedDict(negAttr_arr)        
 
 # element node
 class FeaturesTag(NodeMixin):
@@ -449,7 +451,10 @@ class FeaturesTree():
                  self.getGeometric, self.getLineHeight, self.getMargin,
                  self.getPadding, self.getPosition, self.getShow, self.getZindex]
         for f in funcs:
-            t = threading.Thread(target=f, args=(fNode, tmp,))
+            if f == self.getMargin or f == self.getPadding:
+                t = threading.Thread(target=f, args=(fNode, tmp, node,))
+            else:
+                t = threading.Thread(target=f, args=(fNode, tmp,))
             t.start()
             threads.append(t)
         # getColor method take "collector" as argument
@@ -554,18 +559,55 @@ class FeaturesTree():
         else:
             fNode.CSS_features["lineHeight"] = float(re.findall(self.comVars.num_re, t)[0][0])
 
-    def getMargin(self, fNode, tmp):
-        mg_top = float(re.sub(self.comVars.length_re, "", tmp["marginTop"]))
-        mg_right = float(re.sub(self.comVars.length_re, "", tmp["marginRight"]))
-        mg_bottom = float(re.sub(self.comVars.length_re, "", tmp["marginBottom"]))
-        mg_left = float(re.sub(self.comVars.length_re, "", tmp["marginLeft"]))
+    def getMargin(self, fNode, tmp, node):
+        try:
+            mg_top = float(re.sub(self.comVars.length_re, "", tmp["marginTop"]))
+            mg_right = float(re.sub(self.comVars.length_re, "", tmp["marginRight"]))
+            mg_bottom = float(re.sub(self.comVars.length_re, "", tmp["marginBottom"]))
+            mg_left = float(re.sub(self.comVars.length_re, "", tmp["marginLeft"]))
+        except ValueError: # auto
+            mg_top = float(re.sub(self.comVars.length_re, "", 
+                                  self.driver.execute_script(
+                                      self.comVars.getComputedStyleJs, node, 
+                                      "marginTop")))
+            mg_right = float(re.sub(self.comVars.length_re, "", 
+                                  self.driver.execute_script(
+                                      self.comVars.getComputedStyleJs, node, 
+                                      "marginRight")))
+            mg_bottom = float(re.sub(self.comVars.length_re, "", 
+                                  self.driver.execute_script(
+                                      self.comVars.getComputedStyleJs, node, 
+                                      "marginBottom")))
+            mg_left = float(re.sub(self.comVars.length_re, "", 
+                                  self.driver.execute_script(
+                                      self.comVars.getComputedStyleJs, node, 
+                                      "marginLeft")))
+        
         fNode.CSS_features["margin"] = [mg_top, mg_right, mg_bottom, mg_left]
 
-    def getPadding(self, fNode, tmp):
-        pd_top = float(re.sub(self.comVars.length_re, "", tmp["paddingTop"]))
-        pd_right = float(re.sub(self.comVars.length_re, "", tmp["paddingRight"]))
-        pd_bottom = float(re.sub(self.comVars.length_re, "", tmp["paddingBottom"]))
-        pd_left = float(re.sub(self.comVars.length_re, "", tmp["paddingLeft"]))
+    def getPadding(self, fNode, tmp, node):
+        try:
+            pd_top = float(re.sub(self.comVars.length_re, "", tmp["paddingTop"]))
+            pd_right = float(re.sub(self.comVars.length_re, "", tmp["paddingRight"]))
+            pd_bottom = float(re.sub(self.comVars.length_re, "", tmp["paddingBottom"]))
+            pd_left = float(re.sub(self.comVars.length_re, "", tmp["paddingLeft"]))
+        except ValueError: # auto
+            pd_top = float(re.sub(self.comVars.length_re, "", 
+                                  self.driver.execute_script(
+                                      self.comVars.getComputedStyleJs, node, 
+                                      "paddingTop")))
+            pd_right = float(re.sub(self.comVars.length_re, "", 
+                                  self.driver.execute_script(
+                                      self.comVars.getComputedStyleJs, node, 
+                                      "paddingRight")))
+            pd_bottom = float(re.sub(self.comVars.length_re, "", 
+                                  self.driver.execute_script(
+                                      self.comVars.getComputedStyleJs, node, 
+                                      "paddingBottom")))
+            pd_left = float(re.sub(self.comVars.length_re, "", 
+                                  self.driver.execute_script(
+                                      self.comVars.getComputedStyleJs, node, 
+                                      "paddingLeft")))
         fNode.CSS_features["padding"] = [pd_top, pd_right, pd_bottom, pd_left]
 
     def getPosition(self, fNode, tmp):
