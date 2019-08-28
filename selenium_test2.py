@@ -1,4 +1,4 @@
-import datetime
+import datetime, threading, re, os
 from os import listdir
 from os.path import isfile, join
 
@@ -7,43 +7,71 @@ from selenium import webdriver
 
 import FeaturesTree as ft
 
-
+def convertAPage(comVar, path):
+    # start the browser
+    options = webdriver.ChromeOptions()
+    options.add_argument("-headless")
+    options.add_argument("--window-position=0,0")
+    driver = webdriver.Chrome(options = options)
+    #set to offline
+    driver.set_network_conditions(offline=True, latency=0, 
+                                  throughput=1024 * 1024*1024)
+    driver.set_window_size(1920, 1080)    
+    driver.get("file:///" + path)
+    # start parsing
+    str_cvrt = datetime.datetime.now()
+    ftree = ft.FeaturesTree(driver, comVar)
+    html = driver.find_element_by_tag_name("html")
+    root = ftree.DFT_driver(html)
+    end_cvrt = datetime.datetime.now()       
+    driver.close()
+    # export as JSON file
+    file_name = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', path))
+    # print duration time
+    print(file_name, "takes:", end_cvrt - str_cvrt)
+    exporter = JsonExporter(indent=2)
+    with open("./JSON/" + file_name + ".json", "w") as f:
+        f.write(exporter.export(root))
+        f.close()  
+    
 if __name__ == '__main__':
     # get all webpage
     path = "D:/Downloads/dragnet_data-master/HTML/"
-    files = [f for f in listdir(path) if isfile(join(path, f))]
-
+    jsonPath = "D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/"
+    files = []
+    for f in listdir(path):
+        p = join(path, f)
+        if isfile(p) and f.endswith(".html"):
+            files.append(p)
+    # sort by size
+    files = sorted(files, key=os.path.getsize)
     # initialize & get common used variables
-    vars = ft.CommonVars("./top_100_fonts_lowercase.csv", 
+    com = ft.CommonVars("./top_100_fonts_lowercase.csv", 
                          "./returnChildNodes.js", 
                          "./returnNodeAttributes.js")
     
-    for f in files:
-        # start the browser
-        options = webdriver.ChromeOptions()
-        options.add_argument("-headless")
-        options.add_argument("--window-position=0,0")
-        driver = webdriver.Chrome(options = options)
-        #set to offline
-        driver.set_network_conditions(offline=True, latency=0, 
-                                      throughput=1024 * 1024*1024)
-        driver.set_window_size(1920, 1080)
-        
-        driver.get(path + f)
-        # start parsing
-        str_cvrt = datetime.datetime.now()
-        ftree = ft.FeaturesTree(driver, vars)
-        html = driver.find_element_by_tag_name("html")
-        root = ftree.DFT_driver(html)
-        end_cvrt = datetime.datetime.now()
-        # export as file
-        exporter = JsonExporter(indent=2)
-        with open("./JSON/" + f + ".json", "w") as f:
-            f.write(exporter.export(root))
-            f.close()
-        # print duration time
-        print(end_cvrt - str_cvrt)
-        driver.close()
+    threads = [] # child threads
+    shift = 5
+    start = 0
+    end = start + shift
+    while(files[start:end]):            
+        for f in files[start:end]:
+            # check whether the file has been processed
+            json = jsonPath + re.sub("[\s\S]*[\\/]", '', 
+                                     re.sub("\.[\s\S]*", '', f)) + ".json"
+            if not os.path.exists(json):
+                print("processing:", f)
+                thread = threading.Thread(target=convertAPage, args=(com, f,))
+                thread.start()
+                threads.append(thread)
+            else:
+                print("skip:", json)
+        for t in threads:
+            t.join()
+        start = end
+        end += shift
+    print("done")
+
     '''
     # used for testing
     # read previous session

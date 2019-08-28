@@ -552,7 +552,7 @@ class FeaturesTree():
         if t == "normal":
             fNode.CSS_features["lineHeight"] = 1.2
         else:
-            fNode.CSS_features["lineHeight"] = float(re.findall(self.comVars.num_re, t)[0])
+            fNode.CSS_features["lineHeight"] = float(re.findall(self.comVars.num_re, t)[0][0])
 
     def getMargin(self, fNode, tmp):
         mg_top = float(re.sub(self.comVars.length_re, "", tmp["marginTop"]))
