@@ -20,7 +20,7 @@ def convertAPage(comVar, path):
     driver.get("file:///" + path)
     # start parsing
     str_cvrt = datetime.datetime.now()
-    ftree = ft.FeaturesTree(driver, comVar)
+    ftree = ft.FeaturesTree(driver, comVar, debug = True)
     html = driver.find_element_by_tag_name("html")
     root = ftree.DFT_driver(html)
     end_cvrt = datetime.datetime.now()       
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     com = ft.CommonVars("./top_100_fonts_lowercase.csv", 
                          "./returnChildNodes.js", 
                          "./returnNodeAttributes.js",
-                         "./getComputedStyle.js")
+                         "./jquery.js")
     
     threads = [] # child threads
     shift = 5

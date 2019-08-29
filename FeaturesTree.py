@@ -1,8 +1,6 @@
 from anytree import NodeMixin, RenderTree
 from collections import OrderedDict
 import re, threading, csv
-from numpy.lib.function_base import disp
-from _collections import OrderedDict
 #from math import log, exp
 
 # node type
@@ -14,8 +12,8 @@ class Type():
 # common used variables
 class CommonVars():
     def __init__(self, fonts_lower_path, returnChildeNode_path, 
-                 returnNodeAttrs_path, getComputedStyle_path):
-        # open files
+                 returnNodeAttrs_path, loadJQuery_path):
+        # open/load javascript files
         # get top fonts & convert to array
         with open(fonts_lower_path, encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -25,8 +23,11 @@ class CommonVars():
                                   encoding="utf-8").read()
         self.nodeAttributesJs = open(returnNodeAttrs_path, "r",
                                   encoding="utf-8").read()
-        self.getComputedStyleJs = open(getComputedStyle_path, "r",
-                                  encoding="utf-8").read()
+        self.loadJQuery = open(loadJQuery_path, "r", encoding="utf-8").read()
+        self.jQGetMarginTopBottomJs = "var n=$(argument[0]);return (n.outerHeight(true)-n.outerHeight())/2.0"  
+        self.jQGetMarginRightLeftJs = "var n=$(argument[0]);return (n.outerWidth(true)-n.outerWidth())/2.0"  
+        self.jQGetPaddingTopBottomJs = "var n=$(argument[0]);return (n.innerHeight()-n.height())/2.0"  
+        self.jQGetPaddingRightLeftJs = "var n=$(argument[0]);return (n.innerWidth()-n.width())/2.0"  
         # REGEX
         # number
         self.num_re = "[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
@@ -111,7 +112,7 @@ class CommonVars():
                        ("shopping", 0), ("shoutbox", 0), ("sidebar", 0), 
                        ("sponsor", 0), ("tags", 0), ("th", 0), ("tool", 0), 
                        ("tweet", 0), ("twitter", 0), ("ul", 0), ("widget", 0)]
-        self.negAttr = OrderedDict(negAttr_arr)        
+        self.negAttr = OrderedDict(negAttr_arr)      
 
 # element node
 class FeaturesTag(NodeMixin):
@@ -221,8 +222,9 @@ class FeaturesTree():
         self.comVars = comVars # common used variables
         self.root = None # root of FeaturesTree
         self.html = None # root of document
-        self.head = None # root of some meta data       
+        self.head = None # root of some meta data
         self.debug = debug # used for debug mode to display more informations 
+        self.jQueryLoaded = False # whether jquery has been loaded
 
     # traverse DOM tree bottom-up, depth first traverse
     def DFT_driver(self, node):
@@ -565,24 +567,18 @@ class FeaturesTree():
             mg_right = float(re.sub(self.comVars.length_re, "", tmp["marginRight"]))
             mg_bottom = float(re.sub(self.comVars.length_re, "", tmp["marginBottom"]))
             mg_left = float(re.sub(self.comVars.length_re, "", tmp["marginLeft"]))
-        except ValueError: # auto
-            mg_top = float(re.sub(self.comVars.length_re, "", 
-                                  self.driver.execute_script(
-                                      self.comVars.getComputedStyleJs, node, 
-                                      "marginTop")))
-            mg_right = float(re.sub(self.comVars.length_re, "", 
-                                  self.driver.execute_script(
-                                      self.comVars.getComputedStyleJs, node, 
-                                      "marginRight")))
-            mg_bottom = float(re.sub(self.comVars.length_re, "", 
-                                  self.driver.execute_script(
-                                      self.comVars.getComputedStyleJs, node, 
-                                      "marginBottom")))
-            mg_left = float(re.sub(self.comVars.length_re, "", 
-                                  self.driver.execute_script(
-                                      self.comVars.getComputedStyleJs, node, 
-                                      "marginLeft")))
-        
+        except ValueError as err: # auto
+            if self.debug:
+                print("@getMargin, src:%s, parent:%s, node:%s\nError:%s" % (
+                    self.url,
+                    getattr(fNode.parent, "tagName", "None"), 
+                    getattr(fNode, "tagName", "TEXT_NODE"), err))
+            if not self.jQueryLoaded:
+                self.loadJQuery()
+            mg_top = mg_bottom = float(self.driver.execute_script(
+                self.comVars.jQGetMarginTopBottomJs, node))
+            mg_right = mg_left = float(self.driver.execute_script(
+                self.comVars.jQGetMarginRightLeftJs, node))       
         fNode.CSS_features["margin"] = [mg_top, mg_right, mg_bottom, mg_left]
 
     def getPadding(self, fNode, tmp, node):
@@ -592,22 +588,17 @@ class FeaturesTree():
             pd_bottom = float(re.sub(self.comVars.length_re, "", tmp["paddingBottom"]))
             pd_left = float(re.sub(self.comVars.length_re, "", tmp["paddingLeft"]))
         except ValueError: # auto
-            pd_top = float(re.sub(self.comVars.length_re, "", 
-                                  self.driver.execute_script(
-                                      self.comVars.getComputedStyleJs, node, 
-                                      "paddingTop")))
-            pd_right = float(re.sub(self.comVars.length_re, "", 
-                                  self.driver.execute_script(
-                                      self.comVars.getComputedStyleJs, node, 
-                                      "paddingRight")))
-            pd_bottom = float(re.sub(self.comVars.length_re, "", 
-                                  self.driver.execute_script(
-                                      self.comVars.getComputedStyleJs, node, 
-                                      "paddingBottom")))
-            pd_left = float(re.sub(self.comVars.length_re, "", 
-                                  self.driver.execute_script(
-                                      self.comVars.getComputedStyleJs, node, 
-                                      "paddingLeft")))
+            if self.debug:
+                print("@getPadding, src:%s, parent:%s, node:%s\nError:%s" % (
+                    self.url,
+                    getattr(fNode.parent, "tagName", "None"), 
+                    getattr(fNode, "tagName", "TEXT_NODE"), err))
+            if not self.jQueryLoaded:
+                self.loadJQuery()
+            pd_top = pd_bottom = float(self.driver.execute_script(
+                self.comVars.jQGetPaddingTopBottomJs, node))
+            pd_right = pd_left = float(self.driver.execute_script(
+                self.comVars.jQGetPaddingRightLeftJs, node))
         fNode.CSS_features["padding"] = [pd_top, pd_right, pd_bottom, pd_left]
 
     def getPosition(self, fNode, tmp):
@@ -628,7 +619,9 @@ class FeaturesTree():
             fNode.CSS_features["zIndex"] = 0  
         else:
             fNode.CSS_features["zIndex"] = int(tmp["zIndex"])
-    
+    def loadJQuery(self):
+        self.driver.execute_script(self.comVars.loadJQuery)
+        self.jQueryLoaded = True
     def printTree(self, root):
         for pre, _, node in RenderTree(root):
             treestr = u"%s%s" % (pre, node.tagName)
