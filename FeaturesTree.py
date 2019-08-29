@@ -563,10 +563,8 @@ class FeaturesTree():
 
     def getMargin(self, fNode, tmp, node):
         try:
-            mg_top = float(re.sub(self.comVars.length_re, "", tmp["marginTop"]))
-            mg_right = float(re.sub(self.comVars.length_re, "", tmp["marginRight"]))
-            mg_bottom = float(re.sub(self.comVars.length_re, "", tmp["marginBottom"]))
-            mg_left = float(re.sub(self.comVars.length_re, "", tmp["marginLeft"]))
+            mg_top = float(re.sub(self.comVars.length_re, "", tmp["marginTop"]))            
+            mg_bottom = float(re.sub(self.comVars.length_re, "", tmp["marginBottom"]))            
         except ValueError as err: # auto
             if self.debug:
                 print("@getMargin, src:%s, parent:%s, node:%s\nError:%s" % (
@@ -577,16 +575,25 @@ class FeaturesTree():
                 self.loadJQuery()
             mg_top = mg_bottom = float(self.driver.execute_script(
                 self.comVars.jQGetMarginTopBottomJs, node))
+        try:
+            mg_right = float(re.sub(self.comVars.length_re, "", tmp["marginRight"])) 
+            mg_left = float(re.sub(self.comVars.length_re, "", tmp["marginLeft"]))            
+        except ValueError as err: # auto
+            if self.debug:
+                print("@getMargin, src:%s, parent:%s, node:%s\nError:%s" % (
+                    self.url,
+                    getattr(fNode.parent, "tagName", "None"), 
+                    getattr(fNode, "tagName", "TEXT_NODE"), err))
+            if not self.jQueryLoaded:
+                self.loadJQuery()
             mg_right = mg_left = float(self.driver.execute_script(
-                self.comVars.jQGetMarginRightLeftJs, node))       
+                self.comVars.jQGetMarginRightLeftJs, node))      
         fNode.CSS_features["margin"] = [mg_top, mg_right, mg_bottom, mg_left]
 
     def getPadding(self, fNode, tmp, node):
         try:
-            pd_top = float(re.sub(self.comVars.length_re, "", tmp["paddingTop"]))
-            pd_right = float(re.sub(self.comVars.length_re, "", tmp["paddingRight"]))
-            pd_bottom = float(re.sub(self.comVars.length_re, "", tmp["paddingBottom"]))
-            pd_left = float(re.sub(self.comVars.length_re, "", tmp["paddingLeft"]))
+            pd_top = float(re.sub(self.comVars.length_re, "", tmp["paddingTop"]))            
+            pd_bottom = float(re.sub(self.comVars.length_re, "", tmp["paddingBottom"]))            
         except ValueError: # auto
             if self.debug:
                 print("@getPadding, src:%s, parent:%s, node:%s\nError:%s" % (
@@ -597,6 +604,17 @@ class FeaturesTree():
                 self.loadJQuery()
             pd_top = pd_bottom = float(self.driver.execute_script(
                 self.comVars.jQGetPaddingTopBottomJs, node))
+        try:
+            pd_right = float(re.sub(self.comVars.length_re, "", tmp["paddingRight"]))
+            pd_left = float(re.sub(self.comVars.length_re, "", tmp["paddingLeft"]))
+        except ValueError: # auto
+            if self.debug:
+                print("@getPadding, src:%s, parent:%s, node:%s\nError:%s" % (
+                    self.url,
+                    getattr(fNode.parent, "tagName", "None"), 
+                    getattr(fNode, "tagName", "TEXT_NODE"), err))
+            if not self.jQueryLoaded:
+                self.loadJQuery()
             pd_right = pd_left = float(self.driver.execute_script(
                 self.comVars.jQGetPaddingRightLeftJs, node))
         fNode.CSS_features["padding"] = [pd_top, pd_right, pd_bottom, pd_left]
@@ -619,9 +637,11 @@ class FeaturesTree():
             fNode.CSS_features["zIndex"] = 0  
         else:
             fNode.CSS_features["zIndex"] = int(tmp["zIndex"])
+            
     def loadJQuery(self):
         self.driver.execute_script(self.comVars.loadJQuery)
         self.jQueryLoaded = True
+        
     def printTree(self, root):
         for pre, _, node in RenderTree(root):
             treestr = u"%s%s" % (pre, node.tagName)
