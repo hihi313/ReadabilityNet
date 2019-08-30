@@ -24,10 +24,10 @@ class CommonVars():
         self.nodeAttributesJs = open(returnNodeAttrs_path, "r",
                                   encoding="utf-8").read()
         self.loadJQuery = open(loadJQuery_path, "r", encoding="utf-8").read()
-        self.jQGetMarginTopBottomJs = "var n=$(argument[0]);return (n.outerHeight(true)-n.outerHeight())/2.0"  
-        self.jQGetMarginRightLeftJs = "var n=$(argument[0]);return (n.outerWidth(true)-n.outerWidth())/2.0"  
-        self.jQGetPaddingTopBottomJs = "var n=$(argument[0]);return (n.innerHeight()-n.height())/2.0"  
-        self.jQGetPaddingRightLeftJs = "var n=$(argument[0]);return (n.innerWidth()-n.width())/2.0"  
+        self.jQGetMarginTopBottomJs = "var n=$(arguments[0]);return (n.outerHeight(true)-n.outerHeight())/2.0"  
+        self.jQGetMarginRightLeftJs = "var n=$(arguments[0]);return (n.outerWidth(true)-n.outerWidth())/2.0"  
+        self.jQGetPaddingTopBottomJs = "var n=$(arguments[0]);return (n.innerHeight()-n.height())/2.0"  
+        self.jQGetPaddingRightLeftJs = "var n=$(arguments[0]);return (n.innerWidth()-n.width())/2.0"  
         # REGEX
         # number
         self.num_re = "[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"

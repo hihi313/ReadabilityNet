@@ -20,7 +20,7 @@ def convertAPage(comVar, path):
     driver.get("file:///" + path)
     # start parsing
     str_cvrt = datetime.datetime.now()
-    ftree = ft.FeaturesTree(driver, comVar, debug = True)
+    ftree = ft.FeaturesTree(driver, comVar)
     html = driver.find_element_by_tag_name("html")
     root = ftree.DFT_driver(html)
     end_cvrt = datetime.datetime.now()       
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     
     threads = [] # child threads
     shift = 5
-    start = 0
+    start = 180
     end = start + shift
     while(files[start:end]):            
         for f in files[start:end]:
@@ -71,6 +71,7 @@ if __name__ == '__main__':
             t.join()
         start = end
         end += shift
+    
     print("done")
 
     '''

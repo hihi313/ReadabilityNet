@@ -1,0 +1,164 @@
+{
+  "type": 0,
+  "tagName": "html",
+  "dimension": [
+    1080,
+    1920
+  ],
+  "children": [
+    {
+      "type": 1,
+      "tagName": "body",
+      "DOM_features": {
+        "n_char": 0,
+        "n_node": 1,
+        "n_tag": 1,
+        "n_link": 0,
+        "n_link_char": 0,
+        "posTagPoint": 1,
+        "negTagPoint": 0,
+        "posAttrPoint": 0,
+        "negAttrPoint": 0
+      },
+      "DOM_derive_features": {
+        "CNR": 0.0,
+        "TD": 0.0,
+        "TaD": 1.0,
+        "LD": 0.0,
+        "DS": 0
+      },
+      "CSS_features": {
+        "color": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "lineHeight": 1.2,
+        "fontFamily": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "borderWidth": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "margin": [
+          8.0,
+          8.0,
+          8.0,
+          8.0
+        ],
+        "padding": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "width": 1904,
+        "height": 1064,
+        "backgroundColor": [
+          255.0,
+          255.0,
+          255.0,
+          1.0
+        ],
+        "display": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "position": [
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "zIndex": 0
+      },
+      "CSS_derive_features": {
+        "area": 2025856,
+        "x": 8,
+        "y": 8,
+        "right": 8,
+        "bottom": 8,
+        "show": 1
+      }
+    },
+    {
+      "type": 0,
+      "tagName": "head"
+    }
+  ]
+}
