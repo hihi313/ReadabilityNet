@@ -17,10 +17,11 @@ def convertAPage(comVar, path):
     driver.set_network_conditions(offline=True, latency=0, 
                                   throughput=1024 * 1024*1024)
     driver.set_window_size(1920, 1080)    
+    str_ld = datetime.datetime.now()
     driver.get("file:///" + path)
     # start parsing
     str_cvrt = datetime.datetime.now()
-    ftree = ft.FeaturesTree(driver, comVar)
+    ftree = ft.FeaturesTree(driver, comVar, debug=False)
     html = driver.find_element_by_tag_name("html")
     root = ftree.DFT_driver(html)
     end_cvrt = datetime.datetime.now()       
@@ -28,7 +29,7 @@ def convertAPage(comVar, path):
     # export as JSON file
     file_name = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', path))
     # print duration time
-    print(file_name, "takes:", end_cvrt - str_cvrt)
+    print(file_name, "takes:", end_cvrt - str_cvrt, ", load:", str_cvrt - str_ld)
     exporter = JsonExporter(indent=2)
     with open("./JSON/" + file_name + ".json", "w") as f:
         f.write(exporter.export(root))
@@ -51,9 +52,11 @@ if __name__ == '__main__':
                          "./returnNodeAttributes.js",
                          "./jquery.js")
     
+    #files = ["D:/Downloads/dragnet_data-master/HTML/509.html"]
+    
     threads = [] # child threads
     shift = 5
-    start = 180
+    start = 0
     end = start + shift
     while(files[start:end]):            
         for f in files[start:end]:

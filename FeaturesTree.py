@@ -116,7 +116,7 @@ class CommonVars():
 
 # element node
 class FeaturesTag(NodeMixin):
-    def __init__(self, tagName, parent=None, children=None):
+    def __init__(self, tagName, parent=None, children=None, debug=False, attrs=None):
         super(FeaturesTag, self).__init__()
         self.type = Type.FEATURES_TAG
         self.tagName = tagName
@@ -165,6 +165,9 @@ class FeaturesTag(NodeMixin):
         self.CSS_derive_features = OrderedDict([("area", None), ("x", None), 
                                                 ("y", None), ("right", None), 
                                                 ("bottom", None), ("show", None)])
+        # used for debug
+        if debug:
+            self.attrs=attrs
 
 # text node
 class FeaturesText(NodeMixin):
@@ -278,7 +281,11 @@ class FeaturesTree():
                 return fNode
             # FeaturesTags, have features
             else:
-                fNode = FeaturesTag(tagName=tagName, parent=fParent)
+                if self.debug:
+                    attrs = self.driver.execute_script(
+                        self.comVars.nodeAttributesJs, node)
+                fNode = FeaturesTag(tagName=tagName, parent=fParent, 
+                                    debug=self.debug, attrs=attrs)
                 # children features collector
                 '''
                 some features depend on children's feature
@@ -401,19 +408,33 @@ class FeaturesTree():
         fNode.DOM_features["negTagPoint"] = 1 if tagName in self.comVars.negTag else 0
         
     def getAttrPoint(self, fNode, tmp):
-        nClass = re.split("\s+", tmp["class"].lower())
-        nId = re.sub("\s+[\s\S]*", '', tmp["id"].lower())
         posPoint = 0
         negPoint = 0
-        if nId in self.comVars.posAttr:
-            posPoint += 1
-        if nId in self.comVars.negAttr:
-            negPoint += 1
-        for c in nClass:
-            if c in self.comVars.posAttr:
+        try:            
+            nId = re.sub("\s+[\s\S]*", '', tmp["id"].lower())            
+            if nId in self.comVars.posAttr:
                 posPoint += 1
-            if c in self.comVars.negAttr:
-                negPoint += 1        
+            if nId in self.comVars.negAttr:
+                negPoint += 1           
+        except AttributeError as err: # if no id
+            if self.debug:
+                print("@getAttrPoint_id, src:%s, parent:%s, node:%s\nError:%s" % (
+                    self.url,
+                    getattr(fNode.parent, "tagName", "None"), 
+                    getattr(fNode, "tagName", "TEXT_NODE"), err))
+        try:
+            nClass = re.split("\s+", tmp["class"].lower())
+            for c in nClass:
+                if c in self.comVars.posAttr:
+                    posPoint += 1
+                if c in self.comVars.negAttr:
+                    negPoint += 1
+        except AttributeError as err: # if no class
+            if self.debug:
+                print("@getAttrPoint_class, src:%s, parent:%s, node:%s\nError:%s" % (
+                    self.url,
+                    getattr(fNode.parent, "tagName", "None"), 
+                    getattr(fNode, "tagName", "TEXT_NODE"), err))
         fNode.DOM_features["posAttrPoint"] = posPoint
         fNode.DOM_features["negAttrPoint"] = negPoint
 
@@ -594,7 +615,7 @@ class FeaturesTree():
         try:
             pd_top = float(re.sub(self.comVars.length_re, "", tmp["paddingTop"]))            
             pd_bottom = float(re.sub(self.comVars.length_re, "", tmp["paddingBottom"]))            
-        except ValueError: # auto
+        except ValueError as err: # auto
             if self.debug:
                 print("@getPadding, src:%s, parent:%s, node:%s\nError:%s" % (
                     self.url,
@@ -607,7 +628,7 @@ class FeaturesTree():
         try:
             pd_right = float(re.sub(self.comVars.length_re, "", tmp["paddingRight"]))
             pd_left = float(re.sub(self.comVars.length_re, "", tmp["paddingLeft"]))
-        except ValueError: # auto
+        except ValueError as err: # auto
             if self.debug:
                 print("@getPadding, src:%s, parent:%s, node:%s\nError:%s" % (
                     self.url,

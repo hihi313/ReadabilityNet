@@ -1,8 +1,10 @@
 from anytree.importer import JsonImporter
 from anytree.exporter import JsonExporter
 from anytree import RenderTree
-import threading, re, datetime
+import threading, re, datetime, os
 import FeaturesTree as ft
+from os import listdir
+from os.path import isfile, join
 
 # common used variables
 class LabelerVars():
@@ -109,6 +111,67 @@ class LCSLabeler():
                     c[i][j] = max(c[i - 1][j], c[i][j - 1])
         return c[m][n]
 
+################################################################################ normalize features
+
+def labelAPage(comVars, json, correctPath):
+    jsonFileName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', json))
+    # open the file
+    importer = JsonImporter()
+    root = importer.read(open(json, encoding="utf-8"))
+    gold_standard = open(correctPath + jsonFileName + ".html.corrected.txt",
+                         "r", encoding = "utf-8").read()
+    # start labeling
+    str_cvrt = datetime.datetime.now()
+    lbler = LCSLabeler(comVars, root, gold_standard)
+    lbler.DFT_driver()
+    end_cvrt = datetime.datetime.now()
+    # print duration time
+    print(jsonFileName, "takes:", end_cvrt - str_cvrt)      
+    # export as JSON file    
+    exporter = JsonExporter(indent=2)
+    with open("./labeled_JSON/" + jsonFileName + "_labeled.json", "w") as f:
+        f.write(exporter.export(root))
+        f.close()  
+
+correctPath = "D:/Downloads/dragnet_data-master/Corrected/"
+jsonPath = "D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/"
+exportPath = "D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/labeled_JSON/"
+jsons = []
+for f in listdir(jsonPath):
+    p = join(jsonPath, f)
+    if isfile(p) and f.endswith(".json"):
+        jsons.append(p)
+# sort by size
+jsons = sorted(jsons, key=os.path.getsize)
+# initialize & get common used variables
+com = LabelerVars()
+
+threads = [] # child threads
+shift = 5
+start = 0
+end = start + shift
+while(jsons[start:end]):            
+    for j in jsons[start:end]:
+        # check whether the file has been processed
+        labeledJSON = exportPath + re.sub("[\s\S]*[\\/]", '', 
+                                          re.sub("\.[\s\S]*", '', j)) + "_labeled.json"
+        if not os.path.exists(labeledJSON):
+            print("processing:", j)
+            thread = threading.Thread(target=labelAPage, args=(com, j, 
+                                                               correctPath))
+            thread.start()
+            threads.append(thread)
+        else:
+            print("skip:", j)
+    for t in threads:
+        t.join()
+    start = end
+    end += shift
+
+print("done")
+
+'''
+# used for testing
 importer = JsonImporter()
 root = importer.read(open("./R249.json", encoding="utf-8"))
 gold_standard = open("D:\\Downloads\\dragnet_data-master\\Corrected\\R249.html.corrected.txt",
@@ -138,7 +201,10 @@ for pre, _, node in RenderTree(root):
         exporter = JsonExporter(indent=2)
         print(exporter.export(node))
 '''
+'''
 exporter = JsonExporter(indent=2)
 print(exporter.export(root))
 '''
+'''
 print(end - str)
+'''
