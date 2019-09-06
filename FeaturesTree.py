@@ -219,6 +219,7 @@ class Tag(NodeMixin):
 
 # DOM tree features Tree constructor
 class FeaturesTree():
+    ############################################################################ put debug into comVars
     def __init__(self, driver, comVars, debug = False):
         self.driver = driver  # used to execute Javascript
         self.url = driver.current_url # used for debug, store the source page

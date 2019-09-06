@@ -17,6 +17,7 @@ class LabelerVars():
         self.shortText_th = 120
         
 class LCSLabeler():
+    ############################################################################ put debug into comVars
     def __init__(self, comVars, root, gold_standard, debug = False):
         self.comVars = comVars 
         self.root = root        
@@ -25,25 +26,65 @@ class LCSLabeler():
         # remove comment
         self.gold_standard = re.sub(self.comVars.after_comment_re, '', tmp_gld)
         self.lock = threading.Lock()
+        self.textNodes = []
         self.debug = debug
-    def DFT_driver(self):
+    
+    def label_driver(self):
+        self.getTextNodes(self.root)
+        self.textNodes =sorted(self.textNodes, key=self.getTextNodeLen, 
+                               reverse=True)
+        self.labelTextNodes()
         self.DFT(self.root, None)
+    
+    def getTextNodes(self, node):
+        # text nodes
+        if node.type == ft.Type.FEATURES_TEXT:
+            self.textNodes.append(node)
+        # element nodes
+        else:
+            threads = []
+            for child in node.children:
+                cThread = threading.Thread(target=self.getTextNodes, 
+                                           args=(child,))
+                cThread.start()
+                threads.append(cThread)
+            for t in threads:
+                t.join()
+    
+    def getTextNodeLen(self, node):
+        return len(node.strValue)
+    
+    def labelTextNodes(self):
+        for tNode in self.textNodes:
+            n_match = self.compare(tNode)
+            '''
+            If it is "long" content, delete it from gold standard in order to prevent 
+            notation error/nois (for short text)
+            Delete the content if full match
+            '''
+            if n_match > self.comVars.shortText_th:
+                self.gold_standard = re.sub(re.escape(tNode.strValue), '', 
+                                            self.gold_standard, count = 1)
+            tNode.n_match = n_match
+            tNode.similarity = n_match/tNode.DOM_features["n_char"]
+    
     def DFT(self, node, pCollector):
         # text node
         if node.type == ft.Type.FEATURES_TEXT:
-            #self.lock.acquire()
+            self.lock.acquire()
             match = self.compare(node)
             '''
-            If it is content, delete it from gold standard in order to prevent 
+            If it is "long" content, delete it from gold standard in order to prevent 
             notation error/nois (for short text)
-            delete the content if full match
+            Delete the content if full match
             '''
             '''
             may substitute boilerplate first then, cause content cannot be compare 
             '''
-            #self.gold_standard = re.sub(re.escape(node.strValue), '', 
-            #                            self.gold_standard, count = 1)
-            #self.lock.release()
+            if match > self.comVars.shortText_th:
+                self.gold_standard = re.sub(re.escape(node.strValue), '', 
+                                            self.gold_standard, count = 1)
+            self.lock.release()
             # collect for parent
             pCollector["n_match"] += match
             # for debug
@@ -53,7 +94,7 @@ class LCSLabeler():
         # element node
         else:
             # # matched char
-            collector = {"n_match": 0}        
+            collector = {"n_match": 0, "n_pos": 0, "n_neg": 0, "n_neu": 0}
             threads = []
             for child in node.children:
                 cThread = threading.Thread(target=self.DFT, 
@@ -86,7 +127,7 @@ class LCSLabeler():
     def compare(self, node):
         txt = re.sub(self.comVars.space_re, ' ', node.strValue)
         # for short string
-        if len(txt) < self.comVars.shortText_th:
+        if len(txt) <= self.comVars.shortText_th:
             # full match
             if re.search(re.escape(txt), self.gold_standard) != None: #match
                 match = len(node.strValue)#the length of matched string
@@ -113,7 +154,7 @@ class LCSLabeler():
 
 ################################################################################ normalize features
 
-def labelAPage(comVars, json, correctPath):
+def labelAPage(comVars, json, correctPath, debug):
     jsonFileName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', json))
     # open the file
     importer = JsonImporter()
@@ -122,7 +163,7 @@ def labelAPage(comVars, json, correctPath):
                          "r", encoding = "utf-8").read()
     # start labeling
     str_cvrt = datetime.datetime.now()
-    lbler = LCSLabeler(comVars, root, gold_standard)
+    lbler = LCSLabeler(comVars, root, gold_standard, debug=debug)
     lbler.DFT_driver()
     end_cvrt = datetime.datetime.now()
     # print duration time
@@ -132,7 +173,27 @@ def labelAPage(comVars, json, correctPath):
     with open("./labeled_JSON/" + jsonFileName + "_labeled.json", "w") as f:
         f.write(exporter.export(root))
         f.close()  
-
+    if debug:
+        with open("./labeled_JSON/log/" + jsonFileName + "_labeled.log", "w", 
+                  encoding = 'utf8') as f:
+            for pre, _, node in RenderTree(root):
+                try:
+                    treestr = u"%s%s" % (pre, getattr(node, "tagName", "STRING"))
+                    f.write(u"%s %s %s %s %s\n" % (treestr.ljust(8), 
+                          getattr(node, "similarity", '-'), 
+                          getattr(node, "n_match", '-'),
+                          getattr(node, "DOM_features")["n_char"], 
+                          getattr(node, "strValue", '')))
+                except AttributeError:
+                    f.write(u"%s %s %s %s %s\n" % (treestr.ljust(8), 
+                            getattr(node, "similarity", '-'), 
+                            getattr(node, "n_match", '-'),
+                            "-", 
+                            getattr(node, "strValue", '')))
+            f.close()
+            
+#################################### debug flag
+debug = True
 correctPath = "D:/Downloads/dragnet_data-master/Corrected/"
 jsonPath = "D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/"
 exportPath = "D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/labeled_JSON/"
@@ -146,6 +207,8 @@ jsons = sorted(jsons, key=os.path.getsize)
 # initialize & get common used variables
 com = LabelerVars()
 
+jsons = ["D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/R249.json"]
+
 threads = [] # child threads
 shift = 5
 start = 0
@@ -157,8 +220,8 @@ while(jsons[start:end]):
                                           re.sub("\.[\s\S]*", '', j)) + "_labeled.json"
         if not os.path.exists(labeledJSON):
             print("processing:", j)
-            thread = threading.Thread(target=labelAPage, args=(com, j, 
-                                                               correctPath))
+            thread = threading.Thread(target=labelAPage, 
+                                      args=(com, j, correctPath, debug))
             thread.start()
             threads.append(thread)
         else:

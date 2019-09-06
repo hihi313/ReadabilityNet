@@ -4,6 +4,7 @@ from os.path import isfile, join
 
 from anytree.exporter import JsonExporter
 from selenium import webdriver
+from selenium.common import exceptions
 
 import FeaturesTree as ft
 
@@ -18,7 +19,11 @@ def convertAPage(comVar, path):
                                   throughput=1024 * 1024*1024)
     driver.set_window_size(1920, 1080)    
     str_ld = datetime.datetime.now()
-    driver.get("file:///" + path)
+    try:
+        driver.get("file:///" + path)
+    except exceptions.TimeoutException:
+        # timeout, force stop loading
+        driver.execute_script("window.stop();")        
     # start parsing
     str_cvrt = datetime.datetime.now()
     ftree = ft.FeaturesTree(driver, comVar, debug=False)
