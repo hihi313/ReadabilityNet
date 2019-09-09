@@ -237,7 +237,7 @@ jsons = sorted(jsons, key=os.path.getsize)
 # initialize & get common used variables
 com = LabelerVars(debug=debug)
 
-jsons = ["D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/R249.json"]
+#jsons = ["D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/R249.json"]
 
 threads = [] # child threads
 shift = 5
@@ -248,14 +248,14 @@ while(jsons[start:end]):
         # check whether the file has been processed
         labeledJSON = exportPath + re.sub("[\s\S]*[\\/]", '', 
                                           re.sub("\.[\s\S]*", '', j)) + "_labeled.json"
-        #if not os.path.exists(labeledJSON):
-        print("processing:", j)
-        thread = threading.Thread(target=labelAPage, 
-                                  args=(com, j, correctPath))
-        thread.start()
-        threads.append(thread)
-        #else:
-        #    print("skip:", j)
+        if not os.path.exists(labeledJSON):
+            print("processing:", j)
+            thread = threading.Thread(target=labelAPage, 
+                                      args=(com, j, correctPath))
+            thread.start()
+            threads.append(thread)
+        else:
+            print("skip:", j)
     for t in threads:
         t.join()
     start = end
