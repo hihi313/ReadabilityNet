@@ -33,12 +33,12 @@ def convertAPage(comVar, path):
     driver.close()
     # export as JSON file
     file_name = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', path))
-    # print duration time
-    print(file_name, "takes:", end_cvrt - str_cvrt, ", load:", str_cvrt - str_ld)
     exporter = JsonExporter(indent=2)
     with open("./JSON/" + file_name + ".json", "w") as f:
         f.write(exporter.export(root))
         f.close()  
+    # print duration time
+    print(file_name, "takes:", end_cvrt - str_cvrt, ", load:", str_cvrt - str_ld)
     
 if __name__ == '__main__':
     # get all webpage
