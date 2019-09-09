@@ -197,14 +197,13 @@ def labelAPage(comVars, json, correctPath):
     str_cvrt = datetime.datetime.now()
     lbler = LCSLabeler(comVars, root, gold_standard)
     lbler.label_driver()
-    end_cvrt = datetime.datetime.now()
-    # print duration time
-    print(jsonFileName, "takes:", end_cvrt - str_cvrt)      
+    end_cvrt = datetime.datetime.now()        
     # export as JSON file    
     exporter = JsonExporter(indent=2)
     with open("./labeled_JSON/" + jsonFileName + "_labeled.json", "w") as f:
         f.write(exporter.export(root))
-        f.close()  
+        f.close()
+    # export degugging log
     if comVars.debug:
         with open("./labeled_JSON/log/" + jsonFileName + "_labeled.log", "w", 
                   encoding = 'utf8') as f:
@@ -221,6 +220,8 @@ def labelAPage(comVars, json, correctPath):
                     f.write(u"%s %s\n" % (treestr.ljust(8), 
                                           getattr(node, "strValue", '')))
             f.close()
+    # print duration time
+    print(jsonFileName, "takes:", end_cvrt - str_cvrt)  
             
 # debug flag
 debug = True
@@ -240,7 +241,7 @@ com = LabelerVars(debug=debug)
 #jsons = ["D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/R249.json"]
 
 threads = [] # child threads
-shift = 5
+shift = 40
 start = 0
 end = start + shift
 while(jsons[start:end]):            
