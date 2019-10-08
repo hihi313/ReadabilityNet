@@ -12,10 +12,10 @@ class Type():
 # common used variables
 class CommonVars():
     def __init__(self, fonts_lower_path, returnChildeNode_path, 
-                 returnNodeAttrs_path, loadJQuery_path):
+                 returnNodeAttrs_path, loadJQuery_path, debug):
         # open/load javascript files
         # get top fonts & convert to array
-        with open(fonts_lower_path, encoding="utf-8") as f:
+        with open(fonts_lower_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             font_list = [row["font"] for row in reader] # need to be ordered
         # get required JavaScript script
@@ -112,7 +112,8 @@ class CommonVars():
                        ("shopping", 0), ("shoutbox", 0), ("sidebar", 0), 
                        ("sponsor", 0), ("tags", 0), ("th", 0), ("tool", 0), 
                        ("tweet", 0), ("twitter", 0), ("ul", 0), ("widget", 0)]
-        self.negAttr = OrderedDict(negAttr_arr)      
+        self.negAttr = OrderedDict(negAttr_arr)
+        self.debug = debug
 
 # element node
 class FeaturesTag(NodeMixin):
@@ -227,7 +228,6 @@ class FeaturesTree():
         self.root = None # root of FeaturesTree
         self.html = None # root of document
         self.head = None # root of some meta data
-        self.debug = debug # used for debug mode to display more informations 
         self.jQueryLoaded = False # whether jquery has been loaded
 
     # traverse DOM tree bottom-up, depth first traverse
@@ -238,6 +238,7 @@ class FeaturesTree():
 
     def DFT(self, node, fParent, pCollector, pInfo):
         collector = None
+        attrs = None
         # text node
         if type(node) is str:
             # construct text node & compute features
@@ -282,11 +283,11 @@ class FeaturesTree():
                 return fNode
             # FeaturesTags, have features
             else:
-                if self.debug:
+                if self.comVars.debug:
                     attrs = self.driver.execute_script(
                         self.comVars.nodeAttributesJs, node)
                 fNode = FeaturesTag(tagName=tagName, parent=fParent, 
-                                    debug=self.debug, attrs=attrs)
+                                    debug=self.comVars.debug, attrs=attrs)
                 # children features collector
                 '''
                 some features depend on children's feature
@@ -353,7 +354,7 @@ class FeaturesTree():
                 pCollector["color"] = addDict(pCollector["color"], 
                                               collector["color"])
         except TypeError as err:
-            if self.debug:
+            if self.comVars.debug:
                 print("@collect, src:%s, parent:%s, node:%s\nError:%s" % (
                     self.url,
                     getattr(fNode.parent, "tagName", "None"), 
@@ -418,7 +419,7 @@ class FeaturesTree():
             if nId in self.comVars.negAttr:
                 negPoint += 1           
         except AttributeError as err: # if no id
-            if self.debug:
+            if self.comVars.debug:
                 print("@getAttrPoint_id, src:%s, parent:%s, node:%s\nError:%s" % (
                     self.url,
                     getattr(fNode.parent, "tagName", "None"), 
@@ -431,7 +432,7 @@ class FeaturesTree():
                 if c in self.comVars.negAttr:
                     negPoint += 1
         except AttributeError as err: # if no class
-            if self.debug:
+            if self.comVars.debug:
                 print("@getAttrPoint_class, src:%s, parent:%s, node:%s\nError:%s" % (
                     self.url,
                     getattr(fNode.parent, "tagName", "None"), 
@@ -504,7 +505,7 @@ class FeaturesTree():
                     self.comVars.num_re, node.value_of_css_property('background-color'))]
             return alphaBlending(rgba, pInfo["backgroundColor"])
         except TypeError as err:
-            if self.debug:
+            if self.comVars.debug:
                 print("@getSelfDisplayBackgroundColor, src:%s, parent:%s, node:%s, pInfo:%s\nError:%s" % (
                     self.url,
                     getattr(node.parent, "tag_name", "None"), 
@@ -520,7 +521,7 @@ class FeaturesTree():
         
     # get the char color statistic dict of current node 
     def getColor(self, fNode, collector): 
-        if self.debug:
+        if self.comVars.debug:
             #debug mode, show color name
             fNode.CSS_features["color"] = collector["color"]
         else:
@@ -588,7 +589,7 @@ class FeaturesTree():
             mg_top = float(re.sub(self.comVars.length_re, "", tmp["marginTop"]))            
             mg_bottom = float(re.sub(self.comVars.length_re, "", tmp["marginBottom"]))            
         except ValueError as err: # auto
-            if self.debug:
+            if self.comVars.debug:
                 print("@getMargin, src:%s, parent:%s, node:%s\nError:%s" % (
                     self.url,
                     getattr(fNode.parent, "tagName", "None"), 
@@ -601,7 +602,7 @@ class FeaturesTree():
             mg_right = float(re.sub(self.comVars.length_re, "", tmp["marginRight"])) 
             mg_left = float(re.sub(self.comVars.length_re, "", tmp["marginLeft"]))            
         except ValueError as err: # auto
-            if self.debug:
+            if self.comVars.debug:
                 print("@getMargin, src:%s, parent:%s, node:%s\nError:%s" % (
                     self.url,
                     getattr(fNode.parent, "tagName", "None"), 
@@ -617,7 +618,7 @@ class FeaturesTree():
             pd_top = float(re.sub(self.comVars.length_re, "", tmp["paddingTop"]))            
             pd_bottom = float(re.sub(self.comVars.length_re, "", tmp["paddingBottom"]))            
         except ValueError as err: # auto
-            if self.debug:
+            if self.comVars.debug:
                 print("@getPadding, src:%s, parent:%s, node:%s\nError:%s" % (
                     self.url,
                     getattr(fNode.parent, "tagName", "None"), 
@@ -630,7 +631,7 @@ class FeaturesTree():
             pd_right = float(re.sub(self.comVars.length_re, "", tmp["paddingRight"]))
             pd_left = float(re.sub(self.comVars.length_re, "", tmp["paddingLeft"]))
         except ValueError as err: # auto
-            if self.debug:
+            if self.comVars.debug:
                 print("@getPadding, src:%s, parent:%s, node:%s\nError:%s" % (
                     self.url,
                     getattr(fNode.parent, "tagName", "None"), 
@@ -688,4 +689,7 @@ def addDict(x, y):
     if len(x) != len(y):
         raise ValueError("Dict dimension inconsistent:", len(x), len(y), x, y)
     else:
-        return {k1: v1 + v2 for (k1, v1), v2 in zip(x.items(), y.values())}
+        od = OrderedDict()
+        for (k1, v1), v2 in zip(x.items(), y.values()):
+            od[k1] = v1 + v2
+        return od

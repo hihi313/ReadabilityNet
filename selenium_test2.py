@@ -8,7 +8,10 @@ from selenium.common import exceptions
 
 import FeaturesTree as ft
 
-def convertAPage(comVar, path):
+htmlPath = "D:/Downloads/dragnet_data-master/HTML/"
+jsonPath = "D:/Downloads/JSON/"
+
+def convertAPage(comVar, file):
     # start the browser
     options = webdriver.ChromeOptions()
     options.add_argument("-headless")
@@ -19,34 +22,35 @@ def convertAPage(comVar, path):
                                   throughput=1024 * 1024*1024)
     driver.set_window_size(1920, 1080)    
     str_ld = datetime.datetime.now()
+    print("processing:", htmlPath + file + ".html")
     try:
-        driver.get("file:///" + path)
+        driver.get("file:///" + htmlPath + file + ".html") # convert the HTML
     except exceptions.TimeoutException:
         # timeout, force stop loading
         driver.execute_script("window.stop();")        
     # start parsing
     str_cvrt = datetime.datetime.now()
-    ftree = ft.FeaturesTree(driver, comVar, debug=False)
+    ftree = ft.FeaturesTree(driver, comVar)
     html = driver.find_element_by_tag_name("html")
     root = ftree.DFT_driver(html)
     end_cvrt = datetime.datetime.now()       
     driver.close()
-    # export as JSON file
-    file_name = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', path))
+    '''
+    export as JSON file, output JSON's dict will be ordered, 
+    if using OrderedDict
+    '''
     exporter = JsonExporter(indent=2)
-    with open("./JSON/" + file_name + ".json", "w") as f:
+    with open(jsonPath + file + ".json", "w", encoding = "utf-8") as f:
         f.write(exporter.export(root))
+        # print duration time
+        print(f.name, "takes:", end_cvrt - str_cvrt, ", load:", str_cvrt - str_ld)
         f.close()  
-    # print duration time
-    print(file_name, "takes:", end_cvrt - str_cvrt, ", load:", str_cvrt - str_ld)
     
 if __name__ == '__main__':
     # get all webpage
-    path = "D:/Downloads/dragnet_data-master/HTML/"
-    jsonPath = "D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/"
     files = []
-    for f in listdir(path):
-        p = join(path, f)
+    for f in listdir(htmlPath):
+        p = join(htmlPath, f)
         if isfile(p) and f.endswith(".html"):
             files.append(p)
     # sort by size
@@ -55,9 +59,10 @@ if __name__ == '__main__':
     com = ft.CommonVars("./top_100_fonts_lowercase.csv", 
                          "./returnChildNodes.js", 
                          "./returnNodeAttributes.js",
-                         "./jquery.js")
+                         "./jquery.js",
+                         debug = False)
     
-    #files = ["D:/Downloads/dragnet_data-master/HTML/509.html"]
+    files = ["D:/Downloads/dragnet_data-master/HTML/test.html"]
     
     threads = [] # child threads
     shift = 5
@@ -66,15 +71,14 @@ if __name__ == '__main__':
     while(files[start:end]):            
         for f in files[start:end]:
             # check whether the file has been processed
-            json = jsonPath + re.sub("[\s\S]*[\\/]", '', 
-                                     re.sub("\.[\s\S]*", '', f)) + ".json"
-            if not os.path.exists(json):
-                print("processing:", f)
-                thread = threading.Thread(target=convertAPage, args=(com, f,))
+            file = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', f))
+            # whether the JSON file exist
+            if not os.path.exists(jsonPath + file + ".json"):
+                thread = threading.Thread(target=convertAPage, args=(com, file,))
                 thread.start()
                 threads.append(thread)
             else:
-                print("skip:", json)
+                print("skip:", file)
         for t in threads:
             t.join()
         start = end

@@ -185,43 +185,51 @@ class LCSLabeler():
         return c[m][n]
 
 ################################################################################ normalize features
+################################################################################ change output folder to "D" 
+################################################################################ make input & output jsons' dicts as OrderedDict
 
 def labelAPage(comVars, json, correctPath):
-    jsonFileName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', json))
-    # open the file
-    importer = JsonImporter()
-    root = importer.read(open(json, encoding="utf-8"))
-    gold_standard = open(correctPath + jsonFileName + ".html.corrected.txt",
-                         "r", encoding = "utf-8").read()
-    # start labeling
-    str_cvrt = datetime.datetime.now()
-    lbler = LCSLabeler(comVars, root, gold_standard)
-    lbler.label_driver()
-    end_cvrt = datetime.datetime.now()        
-    # export as JSON file    
-    exporter = JsonExporter(indent=2)
-    with open("./labeled_JSON/" + jsonFileName + "_labeled.json", "w") as f:
-        f.write(exporter.export(root))
-        f.close()
-    # export degugging log
-    if comVars.debug:
-        with open("./labeled_JSON/log/" + jsonFileName + "_labeled.log", "w", 
-                  encoding = 'utf8') as f:
-            for pre, _, node in RenderTree(root):
-                treestr = u"%s%s" % (pre, getattr(node, "tagName", "STRING"))
-                try:
-                    f.write(u"%s %s %s %s %s %s\n" % (treestr.ljust(8), 
-                                                      node.label, 
-                                                      node.similarity, 
-                                                      node.n_match, 
-                                                      node.DOM_features["n_char"], 
-                                                      getattr(node, "strValue", '')))
-                except AttributeError: 
-                    f.write(u"%s %s\n" % (treestr.ljust(8), 
-                                          getattr(node, "strValue", '')))
+    try:
+        jsonFileName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', json))
+        # open the file
+        importer = JsonImporter()
+        root = importer.read(open(json, encoding="utf-8"))
+        gold_standard = open(correctPath + jsonFileName + ".html.corrected.txt",
+                             "r", encoding = "utf-8").read()
+        # start labeling
+        str_cvrt = datetime.datetime.now()
+        lbler = LCSLabeler(comVars, root, gold_standard)
+        lbler.label_driver()
+        end_cvrt = datetime.datetime.now()        
+        # export as JSON file    
+        exporter = JsonExporter(indent=2)
+        with open("./labeled_JSON/" + jsonFileName + "_labeled.json", "w") as f:
+            f.write(exporter.export(root))
             f.close()
-    # print duration time
-    print(jsonFileName, "takes:", end_cvrt - str_cvrt)  
+        # export degugging log
+        if comVars.debug:
+            with open("./labeled_JSON/log/" + jsonFileName + "_labeled.log", "w", 
+                      encoding = 'utf8') as f:
+                for pre, _, node in RenderTree(root):
+                    treestr = u"%s%s" % (pre, getattr(node, "tagName", "STRING"))
+                    try:
+                        f.write(u"%s %s %s %s %s %s\n" % (treestr.ljust(8), 
+                                                          node.label, 
+                                                          node.similarity, 
+                                                          node.n_match, 
+                                                          node.DOM_features["n_char"], 
+                                                          getattr(node, "strValue", '')))
+                    except AttributeError: 
+                        f.write(u"%s %s\n" % (treestr.ljust(8), 
+                                              getattr(node, "strValue", '')))
+                f.close()
+        # print duration time
+        print(jsonFileName, "takes:", end_cvrt - str_cvrt)
+    except BaseException as err:
+        print("ERROR:", json)
+        with open("./labeled_JSON/log/ERROR.log", "a", encoding = 'utf8') as f:
+            f.write(u"json:%s,\tError:%s\n" % (json, err))
+            f.close()
             
 # debug flag
 debug = True
@@ -242,7 +250,7 @@ com = LabelerVars(debug=debug)
 
 threads = [] # child threads
 shift = 40
-start = 0
+start = 190
 end = start + shift
 while(jsons[start:end]):            
     for j in jsons[start:end]:
