@@ -214,13 +214,12 @@ class Tag(NodeMixin):
         '''
         this kind of tags have no features, cause always invisible
         '''
-        # attributes on the node
+        # attributes of the node
         if attrs:
             self.attributes = attrs
 
 # DOM tree features Tree constructor
 class FeaturesTree():
-    ############################################################################ put debug into comVars
     def __init__(self, driver, comVars, debug = False):
         self.driver = driver  # used to execute Javascript
         self.url = driver.current_url # used for debug, store the source page
@@ -298,8 +297,8 @@ class FeaturesTree():
                                                         self.comVars.colors, 0)}
                 # current node informations
                 '''
-                some children's features need to take parent's features consider.
-                can be treat as pre-collect the node's features.
+                some children's features need to take parent's features as 
+                consider. can be treat as pre-collect the node's features.
                 '''
                 info = {"colorName": self.getSelfColorName(node), 
                         "backgroundColor": self.getBackgroundColor(pInfo, node)}

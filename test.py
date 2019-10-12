@@ -126,15 +126,10 @@ print("\n", end2-str2)
 print(timeit.timeit('for i in reversed(range(10)):pass', number=times))
 print(timeit.timeit('for n in range(9,-1,-1):pass', number=times))
 '''
-path = "D:/Downloads/dragnet_data-master/HTML/"
-files = []
-for f in listdir(path):
-    if isfile(join(path, f)) and f.endswith(".html"):
-        files.append(join(path, f))
-order = sorted(files, key=os.path.getsize)
-def grouped(iterable, n):
-    #"s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
-    return zip(*[iter(iterable)]*n)
 
-print(os.path.isfile("D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/3809999.json"))
-print(os.path.exists("./JSON"))
+class test:
+    def __init__(self):
+        self.a = 0
+        
+t = test()
+print(t.b)

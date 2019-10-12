@@ -11,7 +11,7 @@ import FeaturesTree as ft
 htmlPath = "D:/Downloads/dragnet_data-master/HTML/"
 jsonPath = "D:/Downloads/JSON/"
 
-def convertAPage(comVar, file):
+def convertAPage(comVar, fName):
     # start the browser
     options = webdriver.ChromeOptions()
     options.add_argument("-headless")
@@ -22,9 +22,9 @@ def convertAPage(comVar, file):
                                   throughput=1024 * 1024*1024)
     driver.set_window_size(1920, 1080)    
     str_ld = datetime.datetime.now()
-    print("processing:", htmlPath + file + ".html")
+    print("processing:", htmlPath + fName + ".html")
     try:
-        driver.get("file:///" + htmlPath + file + ".html") # convert the HTML
+        driver.get("file:///" + htmlPath + fName + ".html") # convert the HTML
     except exceptions.TimeoutException:
         # timeout, force stop loading
         driver.execute_script("window.stop();")        
@@ -39,8 +39,9 @@ def convertAPage(comVar, file):
     export as JSON file, output JSON's dict will be ordered, 
     if using OrderedDict
     '''
+    ############################################################################ some file have codec error when labeling, need to regenerate it
     exporter = JsonExporter(indent=2)
-    with open(jsonPath + file + ".json", "w", encoding = "utf-8") as f:
+    with open(jsonPath + fName + ".json", "w", encoding = "utf-8") as f:
         f.write(exporter.export(root))
         # print duration time
         print(f.name, "takes:", end_cvrt - str_cvrt, ", load:", str_cvrt - str_ld)
@@ -71,14 +72,14 @@ if __name__ == '__main__':
     while(files[start:end]):            
         for f in files[start:end]:
             # check whether the file has been processed
-            file = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', f))
+            fName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', f))
             # whether the JSON file exist
-            if not os.path.exists(jsonPath + file + ".json"):
-                thread = threading.Thread(target=convertAPage, args=(com, file,))
+            if not os.path.exists(jsonPath + fName + ".json"):
+                thread = threading.Thread(target=convertAPage, args=(com, fName,))
                 thread.start()
                 threads.append(thread)
             else:
-                print("skip:", file)
+                print("skip:", fName)
         for t in threads:
             t.join()
         start = end

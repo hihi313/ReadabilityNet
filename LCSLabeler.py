@@ -5,6 +5,9 @@ import threading, re, datetime, os
 import FeaturesTree as ft
 from os import listdir
 from os.path import isfile, join
+from collections import OrderedDict
+from lib2to3.tests.data.infinite_recursion import pthread_mutex_t
+from anytree.node import anynode
 
 class Label():
     POSITIVE = 1
@@ -34,6 +37,10 @@ class LCSLabeler():
         self.lock = threading.Lock()
         self.body = None
         self.textNodes = []
+        # max properties values
+        self.maxZIndex = 0
+        # normalize threads
+        self.normThreads = []
     
     def label_driver(self):
         self.getTextNodes(self.root)
@@ -41,6 +48,10 @@ class LCSLabeler():
                                reverse=True)
         self.labelTextNodes()
         self.DFT(self.body, None)
+        self.normalize(self.body)
+        # wait until all normalize job finish
+        for t in self.normThreads:
+            t.join()
     
     def getTextNodes(self, node):
         # text nodes
@@ -66,6 +77,10 @@ class LCSLabeler():
     def getTextNodeLen(self, node):
         return len(node.strValue)
     
+    '''
+    compare & modify gold standard one by one from longest text node, so no 
+    need to use pthread_mutex
+    '''
     def labelTextNodes(self):
         for tNode in self.textNodes:
             n_match = self.compare(tNode)
@@ -93,6 +108,7 @@ class LCSLabeler():
     # do DFT only in visible <body> tag
     def DFT(self, node, pCollector):
         if node.type == ft.Type.FEATURES_TAG:
+            # labeling base on # of pos/neg/neu nodes
             collector = {"n_match": 0, "n_pos": 0, "n_neg": 0, "n_neu": 0}
             threads = []
             for child in node.children:
@@ -127,6 +143,8 @@ class LCSLabeler():
                     node.label = Label.NEUTRAL
                 else:
                     node.label = Label.POSITIVE
+            # find the max properties values for normalize stage
+            self.maxZIndex = max(self.maxZIndex, node.CSS_features["zIndex"])
         elif node.type == ft.Type.FEATURES_TEXT:
             try:
                 pCollector["n_match"] += node.n_match
@@ -136,6 +154,7 @@ class LCSLabeler():
                     pCollector["n_neg"] += 1
             except TypeError:
                 pass
+        # Tag, just traverse downward
         else:
             threads = []
             for child in node.children:
@@ -183,19 +202,69 @@ class LCSLabeler():
                 else:
                     c[i][j] = max(c[i - 1][j], c[i][j - 1])
         return c[m][n]
-
+    
+    def normalize(self, node):
+        if node.type != ft.Type.TAG:
+            for child in node.children:
+                cThread = threading.Thread(target=self.normalize, args=(child,))
+                cThread.start()    
+                self.normThreads.append(cThread)
+            # normalize DOM raw features
+            normDOMThread = threading.Thread(target=self.normDOM, args=(node,))
+            normDOMThread.start()
+            self.normThreads.append(normDOMThread)
+            # normalize CSS features
+            try:
+                normCSSThread = threading.Thread(target=self.normCSS, args=(node,))
+                normCSSThread.start()
+                self.normThreads.append(normDOMThread)
+            except AttributeError:
+                # text node have no CSS features
+                pass
+        
+    def normDOM(self, node):
+        node.DOM_features["n_char"] = (node.DOM_features["n_char"]
+                                       / self.body.DOM_features["n_char"])
+        node.DOM_features["n_node"] = (node.DOM_features["n_node"]
+                                       / self.body.DOM_features["n_node"])
+        node.DOM_features["n_tag"] = (node.DOM_features["n_tag"]
+                                      / self.body.DOM_features["n_tag"])
+        node.DOM_features["n_link"] = (node.DOM_features["n_link"]
+                                       / self.body.DOM_features["n_link"])
+        node.DOM_features["n_link_char"] = (node.DOM_features["n_link_char"]
+                                            / self.body.DOM_features["n_link_char"])
+        node.DOM_features["n_link_char"] = (node.DOM_features["n_link_char"]
+                                            / self.body.DOM_features["n_link_char"])
+        
+    def normCSS(self, node):
+        # color
+        # line height
+        # font family
+        # border top/right/bottom/left width
+        # margin top/right/bottom/left width
+        # padding top/right/bottom/left width
+        # height
+        # width
+        # area
+        # geometric, x, y, right, bottom
+        # background color
+        # z-index
+        
 ################################################################################ normalize features
-################################################################################ change output folder to "D" 
-################################################################################ make input & output jsons' dicts as OrderedDict
 
-def labelAPage(comVars, json, correctPath):
+# debug flag
+debug = True
+correctPath = "D:/Downloads/dragnet_data-master/Corrected/"
+jsonPath = "D:/Downloads/JSON/"
+labeledPath = "D:/Downloads/labeled_JSON/"
+
+def labelAPage(comVars, fName):
     try:
-        jsonFileName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', json))
-        # open the file
-        importer = JsonImporter()
-        root = importer.read(open(json, encoding="utf-8"))
-        gold_standard = open(correctPath + jsonFileName + ".html.corrected.txt",
-                             "r", encoding = "utf-8").read()
+        # open files
+        importer = JsonImporter(object_pairs_hook = OrderedDict)
+        root = importer.read(open(jsonPath + fName + ".json", encoding="utf-8"))
+        gold_standard = open(correctPath + fName + ".html.corrected.txt", "r", 
+                             encoding = "utf-8").read()
         # start labeling
         str_cvrt = datetime.datetime.now()
         lbler = LCSLabeler(comVars, root, gold_standard)
@@ -203,12 +272,14 @@ def labelAPage(comVars, json, correctPath):
         end_cvrt = datetime.datetime.now()        
         # export as JSON file    
         exporter = JsonExporter(indent=2)
-        with open("./labeled_JSON/" + jsonFileName + "_labeled.json", "w") as f:
+        with open(labeledPath + fName + "_labeled.json", "w") as f:
             f.write(exporter.export(root))
+            # print duration time
+            print(f.name, "takes:", end_cvrt - str_cvrt)
             f.close()
         # export degugging log
         if comVars.debug:
-            with open("./labeled_JSON/log/" + jsonFileName + "_labeled.log", "w", 
+            with open(labeledPath + "log/" + fName + "_labeled.log", "w", 
                       encoding = 'utf8') as f:
                 for pre, _, node in RenderTree(root):
                     treestr = u"%s%s" % (pre, getattr(node, "tagName", "STRING"))
@@ -223,48 +294,39 @@ def labelAPage(comVars, json, correctPath):
                         f.write(u"%s %s\n" % (treestr.ljust(8), 
                                               getattr(node, "strValue", '')))
                 f.close()
-        # print duration time
-        print(jsonFileName, "takes:", end_cvrt - str_cvrt)
     except BaseException as err:
-        print("ERROR:", json)
-        with open("./labeled_JSON/log/ERROR.log", "a", encoding = 'utf8') as f:
-            f.write(u"json:%s,\tError:%s\n" % (json, err))
+        print("ERROR:", fName)
+        with open(labeledPath + "log/ERROR.log", "a", encoding = 'utf8') as f:
+            f.write(u"json:%s,\tError:%s\n" % (fName, err))
             f.close()
             
-# debug flag
-debug = True
-correctPath = "D:/Downloads/dragnet_data-master/Corrected/"
-jsonPath = "D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/"
-exportPath = "D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/labeled_JSON/"
-jsons = []
+files = []
 for f in listdir(jsonPath):
     p = join(jsonPath, f)
     if isfile(p) and f.endswith(".json"):
-        jsons.append(p)
+        files.append(p)
 # sort by size
-jsons = sorted(jsons, key=os.path.getsize)
+files = sorted(files, key=os.path.getsize)
 # initialize & get common used variables
 com = LabelerVars(debug=debug)
 
-#jsons = ["D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/R249.json"]
+#files = ["D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/R249.json"]
 
 threads = [] # child threads
 shift = 40
-start = 190
+start = 0
 end = start + shift
-while(jsons[start:end]):            
-    for j in jsons[start:end]:
+while(files[start:end]):            
+    for f in files[start:end]:
         # check whether the file has been processed
-        labeledJSON = exportPath + re.sub("[\s\S]*[\\/]", '', 
-                                          re.sub("\.[\s\S]*", '', j)) + "_labeled.json"
-        if not os.path.exists(labeledJSON):
-            print("processing:", j)
-            thread = threading.Thread(target=labelAPage, 
-                                      args=(com, j, correctPath))
+        fName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', f))
+        if not os.path.exists(labeledPath + fName + "_labeled.json"):
+            print("processing:", jsonPath + fName + ".json")
+            thread = threading.Thread(target=labelAPage, args=(com, fName))
             thread.start()
             threads.append(thread)
         else:
-            print("skip:", j)
+            print("skip:", f)
     for t in threads:
         t.join()
     start = end
