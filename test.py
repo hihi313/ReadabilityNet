@@ -127,9 +127,17 @@ print(timeit.timeit('for i in reversed(range(10)):pass', number=times))
 print(timeit.timeit('for n in range(9,-1,-1):pass', number=times))
 '''
 
-class test:
-    def __init__(self):
-        self.a = 0
-        
-t = test()
-print(t.b)
+a = 2
+b = 4
+c = 8
+d = (a
+     +b
+     -c)
+print(d)
+
+arr = [1, 2, 3, 4]
+arr2 = [4, 5, 6, 7]
+for i in arr:
+    print(arr.index(i))
+
+print(sum(i[0] * i[1] for i in zip(arr, arr2)))

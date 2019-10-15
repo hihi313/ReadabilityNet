@@ -6,8 +6,6 @@ import FeaturesTree as ft
 from os import listdir
 from os.path import isfile, join
 from collections import OrderedDict
-from lib2to3.tests.data.infinite_recursion import pthread_mutex_t
-from anytree.node import anynode
 
 class Label():
     POSITIVE = 1
@@ -168,7 +166,7 @@ class LCSLabeler():
     # compare node's string value only for text node
     def compare(self, node):
         '''
-        Always normalize before compare, cause there is modification after 
+        Always normalize space before compare, cause there is modification after 
         comparison
         '''
         # normalize space in text node's text
@@ -204,6 +202,7 @@ class LCSLabeler():
         return c[m][n]
     
     def normalize(self, node):
+        # FEATURES_TAG & FEATURES_TEXT
         if node.type != ft.Type.TAG:
             for child in node.children:
                 cThread = threading.Thread(target=self.normalize, args=(child,))
@@ -213,14 +212,16 @@ class LCSLabeler():
             normDOMThread = threading.Thread(target=self.normDOM, args=(node,))
             normDOMThread.start()
             self.normThreads.append(normDOMThread)
-            # normalize CSS features
-            try:
+            # only FEATURES_TAG
+            if node.type == ft.Type.FEATURES_TAG:
+                # normalize CSS features
                 normCSSThread = threading.Thread(target=self.normCSS, args=(node,))
                 normCSSThread.start()
                 self.normThreads.append(normDOMThread)
-            except AttributeError:
-                # text node have no CSS features
-                pass
+                # add adjust value
+                adjThread = threading.Thread(target=self.addAdj, args=(node,))
+                adjThread.start()
+                self.normThreads.append(adjThread)
         
     def normDOM(self, node):
         node.DOM_features["n_char"] = (node.DOM_features["n_char"]
@@ -238,19 +239,62 @@ class LCSLabeler():
         
     def normCSS(self, node):
         # color
+        totColor = sum(node.CSS_features["color"])
+        try:
+            node.CSS_features["color"] = [i/totColor 
+                                          for i in node.CSS_features["color"]]
+        except ZeroDivisionError:
+            pass
         # line height
-        # font family
+        node.CSS_features["lineHeight"] = (node.CSS_features["lineHeight"]
+                                           / self.body.CSS_features["lineHeight"])
         # border top/right/bottom/left width
-        # margin top/right/bottom/left width
-        # padding top/right/bottom/left width
+        width = node.CSS_features["width"]
+        node.CSS_features["borderWidth"] = [i/width 
+                                            for i in node.CSS_features["borderWidth"]]
+        # margin width
+        docHeight = self.root.dimension[0]
+        docWidth = self.root.dimension[1]
+        margin = node.CSS_features["margin"]
+        node.CSS_features["margin"] = [margin[0]/docHeight, margin[1]/docWidth,
+                                       margin[2]/docHeight, margin[3]/docWidth]
+        # padding width
+        padding = node.CSS_features["padding"]
+        node.CSS_features["padding"] = [padding[0]/docHeight, padding[1]/docWidth,
+                                       padding[2]/docHeight, padding[3]/docWidth]
         # height
+        node.CSS_features["height"] = node.CSS_features["height"]/docHeight
         # width
+        node.CSS_features["width"] = node.CSS_features["width"]/docWidth
         # area
-        # geometric, x, y, right, bottom
+        node.CSS_derive_features["area"] = (node.CSS_derive_features["area"]
+                                            / (docHeight * docWidth))
+        # geometric: x, y, right, bottom
+        node.CSS_derive_features["x"] = node.CSS_derive_features["x"]/docWidth
+        node.CSS_derive_features["y"] = node.CSS_derive_features["y"]/docHeight
+        node.CSS_derive_features["right"] = (node.CSS_derive_features["right"]
+                                             / docWidth)
+        node.CSS_derive_features["bottom"] = (node.CSS_derive_features["bottom"]
+                                              / docWidth)
         # background color
+        node.CSS_features["backgroundColor"] = [i/255 for i in node.CSS_features[
+                                                    "backgroundColor"]]
         # z-index
-        
-################################################################################ normalize features
+        try:
+            node.CSS_features["zIndex"] = (node.CSS_features["zIndex"]
+                                           / self.maxZIndex)
+        except ZeroDivisionError:
+            pass
+     
+    # add adjust value and save at CSS_derive_features   
+    ############################################################################ do after all node's color normalized
+    def addAdj(self, node):
+        # font color popularity
+        # dot product of node.color & body.color
+        node.CSS_derive_features["colorPopularity"] = sum(i[0] * i[1] for i in zip(
+                node.CSS_features["color"], self.body.CSS_features["color"]))
+        # font size adjust value
+        # font size popularity
 
 # debug flag
 debug = True
@@ -310,7 +354,7 @@ files = sorted(files, key=os.path.getsize)
 # initialize & get common used variables
 com = LabelerVars(debug=debug)
 
-#files = ["D:/OneDrive/Code_Backup/eclipse_workspace/selenium_test2/src/JSON/R249.json"]
+files = ["D:/Downloads/JSON/test.json"]
 
 threads = [] # child threads
 shift = 40

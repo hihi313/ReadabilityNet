@@ -65,6 +65,7 @@ class CommonVars():
         fonts_arr = [(f, 0) for f in font_list[:self.Nfonts]
                       if f not in self.gfonts]
         self.fonts = OrderedDict(fonts_arr)
+        ######################################################################## add font size
         # display property value array
         display_arr = [("block", 0), ("contents", 0), ("flex", 0), 
                         ("grid", 0), ("inline", 0), ("inline-block", 0), 
