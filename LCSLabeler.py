@@ -217,7 +217,7 @@ class LCSLabeler():
                 # normalize CSS features
                 normCSSThread = threading.Thread(target=self.normCSS, args=(node,))
                 normCSSThread.start()
-                self.normThreads.append(normDOMThread)
+                normCSSThread.join() # need to norm before add adjust value
                 # add adjust value
                 adjThread = threading.Thread(target=self.addAdj, args=(node,))
                 adjThread.start()
@@ -239,10 +239,17 @@ class LCSLabeler():
         
     def normCSS(self, node):
         # color
-        totColor = sum(node.CSS_features["color"])
+        totCharColor = sum(node.CSS_features["color"])
         try:
-            node.CSS_features["color"] = [i/totColor 
+            node.CSS_features["color"] = [i/totCharColor 
                                           for i in node.CSS_features["color"]]
+        except ZeroDivisionError:
+            pass
+        # fontSize
+        totCharFontSize = sum(node.CSS_features["fontSize"])
+        try:
+            node.CSS_features["fontSize"] = [i/totCharFontSize 
+                                          for i in node.CSS_features["fontSize"]]
         except ZeroDivisionError:
             pass
         # line height
@@ -287,14 +294,14 @@ class LCSLabeler():
             pass
      
     # add adjust value and save at CSS_derive_features   
-    ############################################################################ do after all node's color normalized
     def addAdj(self, node):
         # font color popularity
         # dot product of node.color & body.color
         node.CSS_derive_features["colorPopularity"] = sum(i[0] * i[1] for i in zip(
                 node.CSS_features["color"], self.body.CSS_features["color"]))
-        # font size adjust value
         # font size popularity
+        node.CSS_derive_features["fontSizePopularity"] = sum(i[0] * i[1] for i in zip(
+                node.CSS_features["fontSize"], self.body.CSS_features["fontSize"]))
 
 # debug flag
 debug = True

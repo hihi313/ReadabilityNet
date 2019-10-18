@@ -2,13 +2,16 @@ from collections import OrderedDict
 import csv, datetime, timeit, os, ntpath, re
 from os import listdir
 from os.path import isfile, join
-from _ast import Try
+from selenium import webdriver
+from dis import dis
 
+# common used variables
 class CommonVars():
-    def __init__(self, fonts_lower_path, returnChildeNode_path, returnNodeAttrs_path):
-        # open files
+    def __init__(self, fonts_lower_path, returnChildeNode_path, 
+                 returnNodeAttrs_path, loadJQuery_path, debug):
+        # open/load javascript files
         # get top fonts & convert to array
-        with open(fonts_lower_path, encoding="utf-8") as f:
+        with open(fonts_lower_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             font_list = [row["font"] for row in reader] # need to be ordered
         # get required JavaScript script
@@ -16,6 +19,11 @@ class CommonVars():
                                   encoding="utf-8").read()
         self.nodeAttributesJs = open(returnNodeAttrs_path, "r",
                                   encoding="utf-8").read()
+        self.loadJQuery = open(loadJQuery_path, "r", encoding="utf-8").read()
+        self.jQGetMarginTopBottomJs = "var n=$(arguments[0]);return (n.outerHeight(true)-n.outerHeight())/2.0"  
+        self.jQGetMarginRightLeftJs = "var n=$(arguments[0]);return (n.outerWidth(true)-n.outerWidth())/2.0"  
+        self.jQGetPaddingTopBottomJs = "var n=$(arguments[0]);return (n.innerHeight()-n.height())/2.0"  
+        self.jQGetPaddingRightLeftJs = "var n=$(arguments[0]);return (n.innerWidth()-n.width())/2.0"  
         # REGEX
         # number
         self.num_re = "[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
@@ -23,8 +31,11 @@ class CommonVars():
         self.length_re = "px"
         # colors
         ''' 
-        need to be ordered, in oder to convert to array, the dict keys are 
-        used to identify the color/give the color a name
+        Using dict to speed up the comparison/finding time.
+        And using OrderedDict to preserve order (& for compatability below 
+        python 3.6).
+        In oder to convert to array, the dict keys are used to identify the 
+        color/give the color a name.
         '''
         self.colors = OrderedDict()
         self.colors["red"] = (255, 0, 0, 1)  # red
@@ -36,25 +47,82 @@ class CommonVars():
         self.colors["black"] = (0, 0, 0, 1) # black
         self.colors["gray"] = (128, 128, 128, 1) # gray
         self.colors["white"] = (255, 255, 255, 1) # white
+        '''
+        In order to shorten the declaration of OrderedDict, so using 
+        (key, value) pair list
+        '''
         # general fonts
-        self.gfonts = ["serif", "sans-serif", "monospace", "cursive",
-                       "fantasy", "system-ui", "emoji", "math", "fangsong"]
+        gfonts_arr = [("serif", 0), ("sans-serif", 0), ("monospace", 0), 
+                       ("cursive", 0), ("fantasy", 0), ("system-ui", 0), 
+                       ("emoji", 0), ("math", 0), ("fangsong", 0)]
+        self.gfonts = OrderedDict(gfonts_arr)        
         # top N fonts
-        self.Nfonts = 100
-        self.fonts = [f for f in font_list[:self.Nfonts]
+        self.Nfonts = 42
+        fonts_arr = [(f, 0) for f in font_list[:self.Nfonts]
                       if f not in self.gfonts]
+        self.fonts = OrderedDict(fonts_arr)
+        ######################################################################## add font size
+        fontSize_arr = [(9, 0), (10, 0), (11, 0), (12, 0), (13, 0), (14, 0), 
+                        (15, 0), (16, 0), (17, 0), (18, 0), (20, 0), (22, 0), 
+                        (24, 0), (26, 0), (28, 0), (30, 0), (32, 0), (34, 0), 
+                        (36, 0), (40, 0), (44, 0), (48, 0), (56, 0), (64, 0), 
+                        (72, 0)]
+        self.fontSize = OrderedDict(fontSize_arr)
         # display property value array
-        self.display_arr = ["inline", "block", "contents", "flex", "grid",
-                            "inline-block", "inline-flex", "inline-grid",
-                            "inline-table", "list-item", "table",
-                            "table-caption", "table-column-group",
-                            "table-header-group", "table-footer-group",
-                            "table-row-group", "table-cell", "table-column",
-                            "table-rownone"]
+        display_arr = [("block", 0), ("contents", 0), ("flex", 0), 
+                        ("grid", 0), ("inline", 0), ("inline-block", 0), 
+                        ("inline-flex", 0), ("inline-grid", 0), 
+                        ("inline-table", 0), ("list-item", 0), ("table", 0), 
+                        ("table-caption", 0), ("table-cell", 0), 
+                        ("table-column", 0), ("table-column-group", 0), 
+                        ("table-footer-group", 0), ("table-header-group", 0), 
+                        ("table-row", 0), ("table-row-group", 0)]
+        self.display = OrderedDict(display_arr)
+        # position property array
+        position_arr = [("static", 0), ("absolute", 0), ("fixed", 0), 
+                         ("relative", 0), ("sticky", 0)]
+        self.position = OrderedDict(position_arr)
+        '''
+        The value of (below) dict is not important
+        '''
+        # positive tag name
+        posTag_arr = [("article", 0), ("blockquote", 0), ("body", 0), 
+                       ("div", 0), ("main", 0), ("post", 0), ("pre", 0), 
+                       ("td", 0)]
+        self.posTag = OrderedDict(posTag_arr)
+        # positive tag name
+        negTag_arr = [("address", 0), ("aside", 0), ("dd", 0), ("dl", 0), 
+                       ("dt", 0), ("footer", 0), ("form", 0), ("li", 0), 
+                       ("nav", 0), ("ol", 0), ("th", 0), ("ul", 0)]
+        self.negTag = OrderedDict(negTag_arr)
+        # positive class, id attribute value
+        posAttr_arr = [("and", 0), ("article", 0), ("blockquote", 0), 
+                       ("blog", 0), ("body", 0), ("column", 0), ("content", 0), 
+                       ("div", 0), ("entry", 0), ("hentry", 0), ("main", 0), 
+                       ("page", 0), ("post", 0), ("pre", 0), ("shadow", 0), 
+                       ("story", 0), ("td", 0), ("text", 0)]
+        self.posAttr = OrderedDict(posAttr_arr)    
+        # negative class, id attribute value
+        negAttr_arr = [("ad-break", 0), ("address", 0), ("agegate", 0), 
+                       ("aside", 0), ("com-", 0), ("combx", 0), ("comment", 0), 
+                       ("community", 0), ("contact", 0), ("dd", 0), 
+                       ("disqus", 0), ("dl", 0), ("dt", 0), ("extra", 0), 
+                       ("footer", 0), ("footnote", 0), ("form", 0), ("li", 0), 
+                       ("masthead", 0), ("media", 0), ("menu", 0), ("meta", 0), 
+                       ("nav", 0), ("ol", 0), ("outbrain", 0), ("pager", 0), 
+                       ("pagination", 0), ("popup", 0), ("promo", 0), 
+                       ("related", 0), ("remark", 0), ("rss", 0), ("scroll", 0), 
+                       ("shopping", 0), ("shoutbox", 0), ("sidebar", 0), 
+                       ("sponsor", 0), ("tags", 0), ("th", 0), ("tool", 0), 
+                       ("tweet", 0), ("twitter", 0), ("ul", 0), ("widget", 0)]
+        self.negAttr = OrderedDict(negAttr_arr)
+        self.debug = debug
 
 com = CommonVars("./top_100_fonts_lowercase.csv", 
-                         "./returnChildNodes.js", 
-                         "./returnNodeAttributes.js")
+                     "./returnChildNodes.js", 
+                     "./returnNodeAttributes.js",
+                     "./jquery.js",
+                     debug = False)
 '''
 # using dict is a little bit faster
 times = 10000
@@ -127,6 +195,8 @@ print(timeit.timeit('for i in reversed(range(10)):pass', number=times))
 print(timeit.timeit('for n in range(9,-1,-1):pass', number=times))
 '''
 
+'''
+# line continuous & vector dot product test
 a = 2
 b = 4
 c = 8
@@ -141,3 +211,38 @@ for i in arr:
     print(arr.index(i))
 
 print(sum(i[0] * i[1] for i in zip(arr, arr2)))
+'''
+
+
+def manhattan(x, y):
+    if len(x) != len(y):
+        raise ValueError("Dict dimension inconsistent:", len(x), len(y), x, y)
+    return sum(abs(x[i]-y[i]) for i in range(len(x)))
+
+'''
+# start the browser
+options = webdriver.ChromeOptions()
+options.add_argument("-headless")
+options.add_argument("--window-position=0,0")
+driver = webdriver.Chrome(options = options)
+#set to offline
+driver.set_network_conditions(offline=True, latency=0, 
+                              throughput=1024 * 1024*1024)
+driver.set_window_size(1920, 1080)    
+driver.get("file:///" + "D:/Downloads/dragnet_data-master/HTML/test.html") # convert the HTML
+     
+# start parsing
+node = driver.find_element_by_tag_name("html")
+rgba = [float(x[0]) for x in re.findall(
+            com.num_re, node.value_of_css_property('color'))]
+print(node.value_of_css_property('color'))
+driver.close()
+'''
+
+distances = {k: manhattan([k], [21]) for k, v in com.fontSize.items()}
+
+print(distances)
+print(min(distances, key = distances.get))
+
+for k in com.fontSize:
+    print(k, com.fontSize[k])

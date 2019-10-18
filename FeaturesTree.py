@@ -1,6 +1,7 @@
 from anytree import NodeMixin, RenderTree
 from collections import OrderedDict
 import re, threading, csv
+from numpy.core._multiarray_umath import PINF
 #from math import log, exp
 
 # node type
@@ -65,7 +66,12 @@ class CommonVars():
         fonts_arr = [(f, 0) for f in font_list[:self.Nfonts]
                       if f not in self.gfonts]
         self.fonts = OrderedDict(fonts_arr)
-        ######################################################################## add font size
+        fontSize_arr = [(9, 0), (10, 0), (11, 0), (12, 0), (13, 0), (14, 0), 
+                        (15, 0), (16, 0), (17, 0), (18, 0), (20, 0), (22, 0), 
+                        (24, 0), (26, 0), (28, 0), (30, 0), (32, 0), (34, 0), 
+                        (36, 0), (40, 0), (44, 0), (48, 0), (56, 0), (64, 0), 
+                        (72, 0)]
+        self.fontSize = OrderedDict(fontSize_arr)
         # display property value array
         display_arr = [("block", 0), ("contents", 0), ("flex", 0), 
                         ("grid", 0), ("inline", 0), ("inline-block", 0), 
@@ -133,40 +139,41 @@ class FeaturesTag(NodeMixin):
         in order to shorten the input features & input layer, posTag, negTag, 
         posAttr, negAttr change to "point"( != "score")
         '''
-        self.DOM_features = OrderedDict([("n_char", None), ("n_node", None), 
-                                         ("n_tag", None), ("n_link", None), 
-                                         ("n_link_char", None), 
-                                         ("posTagPoint", None), 
-                                         ("negTagPoint", None), 
+        self.DOM_features = OrderedDict([("n_char", None), ("n_link", None), 
+                                         ("n_link_char", None), ("n_node", None), 
+                                         ("n_tag", None), 
+                                         ("negAttrPoint", None), 
                                          ("posAttrPoint", None), 
-                                         ("negAttrPoint", None)])
+                                         ("negTagPoint", None), 
+                                         ("posTagPoint", None)])
         # DOM derive features
         '''
         # Char-Node ratio, Text Density, Tag Density, Link Density, 
         Composite Text Density, Density Sum, "None" means not set
         '''
-        self.DOM_derive_features = OrderedDict([("CNR", None), ("TD", None), 
-                                                ("TaD", None),("LD", None), 
-                                                ("DS", None)])
+        self.DOM_derive_features = OrderedDict([("CNR", None), ("DS", None), 
+                                                ("LD", None), ("TaD", None), 
+                                                ("TD", None)])
         # CSS raw feature
         '''
         show = webelement.is_displayed()
         Because of speed concern, split font feature into "fontFamily" & 
         "generalFont" 
         '''
-        self.CSS_features = OrderedDict([("color", None), ("lineHeight", None), 
-                             ("fontFamily", None), ("borderWidth", None), 
-                             ("margin", None), ("padding", None), 
-                             ("width", None), ("height", None), 
-                             ("backgroundColor", None), ("display", None), 
-                             ("position", None), ("zIndex", None)])
+        self.CSS_features = OrderedDict([("backgroundColor", None), 
+                                         ("borderWidth", None), ("color", None), 
+                                         ("display", None), ("fontFamily", None), 
+                                         ("fontSize", None), ("height", None), 
+                                         ("lineHeight", None), ("margin", None), 
+                                         ("padding", None), ("position", None), 
+                                         ("width", None), ("zIndex", None)])
         # CSS derive features
         '''
         x = left, y = top
         '''
-        self.CSS_derive_features = OrderedDict([("area", None), ("x", None), 
-                                                ("y", None), ("right", None), 
-                                                ("bottom", None), ("show", None)])
+        self.CSS_derive_features = OrderedDict([("area", None), ("bottom", None), 
+                                                ("right", None), ("show", None), 
+                                                ("x", None), ("y", None)])
         # used for debug
         if debug:
             self.attrs=attrs
@@ -187,16 +194,16 @@ class FeaturesText(NodeMixin):
         # character, # node, # tag, # link, # link's character under the node
         (inclusive)
         '''
-        self.DOM_features = OrderedDict([("n_char", len(strValue)), 
-                                         ("n_node", 1), ("n_tag", 0), 
-                                         ("n_link", 0), ("n_link_char", 0)])
+        self.DOM_features = OrderedDict([("n_char", len(strValue)), ("n_link", 0), 
+                                         ("n_link_char", 0), ("n_node", 1), 
+                                         ("n_tag", 0)])
         # DOM derive features
         '''
         Text nodes are leaves node and non-tag element, thus Text nodes have no 
         TD, LD, CTD, "None" means not set   
         '''
         self.DOM_derive_features = OrderedDict([("CNR", len(strValue)), 
-                                                ("TaD", 0), ("LD", 0)])
+                                                ("LD", 0), ("TaD", 0)])
 
 # for invisible node (tag not in body)
 '''
@@ -295,13 +302,16 @@ class FeaturesTree():
                 collector = {"n_char": 0, "n_node": 0, "n_tag": 0, "n_link": 0,
                              "n_link_char": 0, "DS": 0, 
                              "color": self.comVars.colors.fromkeys(
-                                                        self.comVars.colors, 0)}
+                                                        self.comVars.colors, 0),
+                             "fontSize": self.comVars.colors.fromkeys(
+                                                        self.comVars.fontSize, 0)}
                 # current node informations
                 '''
                 some children's features need to take parent's features as 
                 consider. can be treat as pre-collect the node's features.
                 '''
                 info = {"colorName": self.getSelfColorName(node), 
+                        "fontSize": self.getSelfFontSize(node),
                         "backgroundColor": self.getBackgroundColor(pInfo, node)}
                 self.fork(node, fNode, collector, info)
                 self.computeFeatures(node, fNode, collector, info)
@@ -347,12 +357,15 @@ class FeaturesTree():
             if fNode.type == Type.FEATURES_TEXT:
                 pCollector["DS"] += 0
                 pCollector["color"][pInfo["colorName"]] += fNode.DOM_features["n_char"]
+                pCollector["fontSize"][pInfo["fontSize"]] += fNode.DOM_features["n_char"]
                 # skip background color
             else:# element node
                 pCollector["DS"] += fNode.DOM_derive_features["TD"]
                 #current node's color feature's (array) "values" == collector["color"] (dict)
                 pCollector["color"] = addDict(pCollector["color"], 
                                               collector["color"])
+                pCollector["fontSize"] = addDict(pCollector["fontSize"], 
+                                                 collector["fontSize"])
         except TypeError as err:
             if self.comVars.debug:
                 print("@collect, src:%s, parent:%s, node:%s\nError:%s" % (
@@ -455,6 +468,8 @@ class FeaturesTree():
         # color = collector["color"]
         tmp["display"] = node.value_of_css_property('display')
         tmp["fontFamily"] = node.value_of_css_property("font-family")
+        ######################################################################## add font size
+        
         tmp["lineHeight"] = node.value_of_css_property("line-height")
         tmp["marginTop"] = node.value_of_css_property("margin-top")
         tmp["marginRight"] = node.value_of_css_property("margin-right")
@@ -472,31 +487,22 @@ class FeaturesTree():
                 
         threads = []
         # (displayed) background color has been done
-        funcs = [self.getBorderWidth, self.getDisplay, self.getFontFamily,
-                 self.getGeometric, self.getLineHeight, self.getMargin,
-                 self.getPadding, self.getPosition, self.getShow, self.getZindex]
+        funcs = [self.getBorderWidth, self.getColor, self.getDisplay, 
+                 self.getFontFamily, self.getFontSize, self.getGeometric, 
+                 self.getLineHeight, self.getMargin, self.getPadding, 
+                 self.getPosition, self.getShow, self.getZindex]
         for f in funcs:
             if f == self.getMargin or f == self.getPadding:
                 t = threading.Thread(target=f, args=(fNode, tmp, node,))
+            elif f == self.getColor or f == self.getFontSize:
+                t = threading.Thread(target=f, args=(fNode, collector,))
             else:
                 t = threading.Thread(target=f, args=(fNode, tmp,))
             t.start()
             threads.append(t)
-        # getColor method take "collector" as argument
-        tColor = threading.Thread(target=self.getColor, args=(fNode, collector,))
-        tColor.start()
-        threads.append(tColor)
         # join
         for t in threads:
             t.join()
-       
-    # just get current node's color
-    def getSelfColorName(self, node):
-        rgba = [float(x[0]) for x in re.findall(
-            self.comVars.num_re, node.value_of_css_property('color'))]
-        distances = {k: manhattan(v, rgba) for k, v in self.comVars.colors.items()}
-        #return color name
-        return min(distances, key=distances.get)
     
     # get current node's actual display background color
     def getBackgroundColor(self, pInfo, node):
@@ -518,15 +524,24 @@ class FeaturesTree():
         bw_bottom = float(re.sub(self.comVars.length_re, "", tmp["borderBottomWidth"]))
         bw_left = float(re.sub(self.comVars.length_re, "", tmp["borderLeftWidth"]))
         fNode.CSS_features["borderWidth"] = [bw_top, bw_right, bw_bottom, bw_left]
-        
-    # get the char color statistic dict of current node 
+    
+    # just get current node's color
+    def getSelfColorName(self, node):
+        rgba = [float(x[0]) for x in re.findall(
+            self.comVars.num_re, node.value_of_css_property('color'))]
+        distances = {k: manhattan(v, rgba) for k, v in self.comVars.colors.items()}
+        #return color name
+        return min(distances, key=distances.get)
+    
+    # get the char color statistic dict of current node
     def getColor(self, fNode, collector): 
         if self.comVars.debug:
             #debug mode, show color name
             fNode.CSS_features["color"] = collector["color"]
         else:
             #convert (ordered) dict to array                     
-            fNode.CSS_features["color"] = [collector["color"][k] for k in collector["color"]]
+            fNode.CSS_features["color"] = [collector["color"][k] 
+                                           for k in collector["color"]]
 
     def getDisplay(self, fNode, tmp):
         d = self.comVars.display.copy()
@@ -565,6 +580,23 @@ class FeaturesTree():
         except KeyError:
             pass
         fNode.CSS_features["fontFamily"] = list(fDict.values()) + list(gfDict.values()) 
+
+    def getSelfFontSize(self, node):
+        fontSize = float(re.sub(self.comVars.length_re, "", 
+                                node.value_of_css_property('font-size'))) 
+        distances = {k: manhattan([k], [fontSize]) 
+                     for k, v in self.comVars.fontSize.items()}
+        # return discrete font size
+        return min(distances, key = distances.get)        
+
+    def getFontSize(self, fNode, collector):
+        if self.comVars.debug:
+            #debug mode, show color name
+            fNode.CSS_features["fontSize"] = collector["fontSize"]
+        else:
+            #convert (ordered) dict to array                     
+            fNode.CSS_features["fontSize"] = [collector["fontSize"][k] 
+                                              for k in collector["fontSize"]]
 
     def getGeometric(self, fNode, tmp):
         fNode.CSS_features["width"] = tmp["rect"]["width"]
@@ -672,7 +704,9 @@ class FeaturesTree():
             
 #used to compute the difference between 2 colors
 def manhattan(x, y):
-    return abs(x[0] - y[0]) + abs(x[1] - y[1]) + abs(x[2] - y[2]) + abs(x[3] - y[3])
+    if len(x) != len(y):
+        raise ValueError("List/Tuple dimension inconsistent:", len(x), len(y), x, y)
+    return sum(abs(x[i]-y[i]) for i in range(len(x)))
 
 #used to get displayed background color
 def alphaBlending(src, dst):
