@@ -1,7 +1,6 @@
 from anytree import NodeMixin, RenderTree
 from collections import OrderedDict
 import re, threading, csv
-from numpy.core._multiarray_umath import PINF
 #from math import log, exp
 
 # node type
@@ -468,8 +467,6 @@ class FeaturesTree():
         # color = collector["color"]
         tmp["display"] = node.value_of_css_property('display')
         tmp["fontFamily"] = node.value_of_css_property("font-family")
-        ######################################################################## add font size
-        
         tmp["lineHeight"] = node.value_of_css_property("line-height")
         tmp["marginTop"] = node.value_of_css_property("margin-top")
         tmp["marginRight"] = node.value_of_css_property("margin-right")
