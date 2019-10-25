@@ -224,18 +224,36 @@ class LCSLabeler():
                 self.normThreads.append(adjThread)
         
     def normDOM(self, node):
-        node.DOM_features["n_char"] = (node.DOM_features["n_char"]
-                                       / self.body.DOM_features["n_char"])
-        node.DOM_features["n_node"] = (node.DOM_features["n_node"]
-                                       / self.body.DOM_features["n_node"])
-        node.DOM_features["n_tag"] = (node.DOM_features["n_tag"]
-                                      / self.body.DOM_features["n_tag"])
-        node.DOM_features["n_link"] = (node.DOM_features["n_link"]
-                                       / self.body.DOM_features["n_link"])
-        node.DOM_features["n_link_char"] = (node.DOM_features["n_link_char"]
-                                            / self.body.DOM_features["n_link_char"])
-        node.DOM_features["n_link_char"] = (node.DOM_features["n_link_char"]
-                                            / self.body.DOM_features["n_link_char"])
+        try:
+            node.DOM_features["n_char"] = (node.DOM_features["n_char"]
+                                           / self.body.DOM_features["n_char"])
+        except ZeroDivisionError:
+            pass
+        try:
+            node.DOM_features["n_node"] = (node.DOM_features["n_node"]
+                                           / self.body.DOM_features["n_node"])
+        except ZeroDivisionError:
+            pass
+        try:
+            node.DOM_features["n_tag"] = (node.DOM_features["n_tag"]
+                                          / self.body.DOM_features["n_tag"])
+        except ZeroDivisionError:
+            pass
+        try:
+            node.DOM_features["n_link"] = (node.DOM_features["n_link"]
+                                           / self.body.DOM_features["n_link"])
+        except ZeroDivisionError:
+            pass
+        try:
+            node.DOM_features["n_link_char"] = (node.DOM_features["n_link_char"]
+                                                / self.body.DOM_features["n_link_char"])
+        except ZeroDivisionError:
+            pass
+        try:
+            node.DOM_features["n_link_char"] = (node.DOM_features["n_link_char"]
+                                                / self.body.DOM_features["n_link_char"])
+        except ZeroDivisionError:
+            pass
         
     def normCSS(self, node):
         # color
