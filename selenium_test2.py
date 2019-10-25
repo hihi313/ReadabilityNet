@@ -22,7 +22,6 @@ def convertAPage(comVar, fName):
                                   throughput=1024 * 1024*1024)
     driver.set_window_size(1920, 1080)    
     str_ld = datetime.datetime.now()
-    print("processing:", htmlPath + fName + ".html")
     try:
         driver.get("file:///" + htmlPath + fName + ".html") # convert the HTML
     except exceptions.TimeoutException:
@@ -39,7 +38,6 @@ def convertAPage(comVar, fName):
     export as JSON file, output JSON's dict will be ordered, 
     if using OrderedDict
     '''
-    ############################################################################ some file have codec error when labeling, need to regenerate it
     exporter = JsonExporter(indent=2)
     with open(jsonPath + fName + ".json", "w", encoding = "utf-8") as f:
         f.write(exporter.export(root))
@@ -63,11 +61,15 @@ if __name__ == '__main__':
                          "./jquery.js",
                          debug = False)
     
-    files = ["D:/Downloads/dragnet_data-master/HTML/test.html"]
-    
+    #files = ["D:/Downloads/dragnet_data-master/HTML/test.html"]
+    '''
+    for i in files[1230:]:
+        print(i, files.index(i))
+    '''
+
     threads = [] # child threads
     shift = 5
-    start = 0
+    start = 1251
     end = start + shift
     while(files[start:end]):            
         for f in files[start:end]:
@@ -75,6 +77,7 @@ if __name__ == '__main__':
             fName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', f))
             # whether the JSON file exist
             if not os.path.exists(jsonPath + fName + ".json"):
+                print("processing:", htmlPath + fName + ".html")
                 thread = threading.Thread(target=convertAPage, args=(com, fName,))
                 thread.start()
                 threads.append(thread)
@@ -84,7 +87,6 @@ if __name__ == '__main__':
             t.join()
         start = end
         end += shift
-    
     print("done")
 
     '''

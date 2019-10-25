@@ -257,32 +257,38 @@ class LCSLabeler():
                                            / self.body.CSS_features["lineHeight"])
         # border top/right/bottom/left width
         width = node.CSS_features["width"]
-        node.CSS_features["borderWidth"] = [i/width 
-                                            for i in node.CSS_features["borderWidth"]]
+        try:
+            node.CSS_features["borderWidth"] = [i/width 
+                                                for i in node.CSS_features["borderWidth"]]
+        except ZeroDivisionError:
+            pass
         # margin width
-        docHeight = self.root.dimension[0]
-        docWidth = self.root.dimension[1]
-        margin = node.CSS_features["margin"]
-        node.CSS_features["margin"] = [margin[0]/docHeight, margin[1]/docWidth,
-                                       margin[2]/docHeight, margin[3]/docWidth]
-        # padding width
-        padding = node.CSS_features["padding"]
-        node.CSS_features["padding"] = [padding[0]/docHeight, padding[1]/docWidth,
-                                       padding[2]/docHeight, padding[3]/docWidth]
-        # height
-        node.CSS_features["height"] = node.CSS_features["height"]/docHeight
-        # width
-        node.CSS_features["width"] = node.CSS_features["width"]/docWidth
-        # area
-        node.CSS_derive_features["area"] = (node.CSS_derive_features["area"]
-                                            / (docHeight * docWidth))
-        # geometric: x, y, right, bottom
-        node.CSS_derive_features["x"] = node.CSS_derive_features["x"]/docWidth
-        node.CSS_derive_features["y"] = node.CSS_derive_features["y"]/docHeight
-        node.CSS_derive_features["right"] = (node.CSS_derive_features["right"]
-                                             / docWidth)
-        node.CSS_derive_features["bottom"] = (node.CSS_derive_features["bottom"]
-                                              / docWidth)
+        try:
+            docHeight = self.root.dimension[0]
+            docWidth = self.root.dimension[1]
+            margin = node.CSS_features["margin"]
+            node.CSS_features["margin"] = [margin[0]/docHeight, margin[1]/docWidth,
+                                           margin[2]/docHeight, margin[3]/docWidth]
+            # padding width
+            padding = node.CSS_features["padding"]
+            node.CSS_features["padding"] = [padding[0]/docHeight, padding[1]/docWidth,
+                                           padding[2]/docHeight, padding[3]/docWidth]
+            # height
+            node.CSS_features["height"] = node.CSS_features["height"]/docHeight
+            # width
+            node.CSS_features["width"] = node.CSS_features["width"]/docWidth
+            # area
+            node.CSS_derive_features["area"] = (node.CSS_derive_features["area"]
+                                                / (docHeight * docWidth))
+            # geometric: x, y, right, bottom
+            node.CSS_derive_features["x"] = node.CSS_derive_features["x"]/docWidth
+            node.CSS_derive_features["y"] = node.CSS_derive_features["y"]/docHeight
+            node.CSS_derive_features["right"] = (node.CSS_derive_features["right"]
+                                                 / docWidth)
+            node.CSS_derive_features["bottom"] = (node.CSS_derive_features["bottom"]
+                                                  / docWidth)
+        except ZeroDivisionError:
+            pass
         # background color
         node.CSS_features["backgroundColor"] = [i/255 for i in node.CSS_features[
                                                     "backgroundColor"]]
@@ -361,7 +367,7 @@ files = sorted(files, key=os.path.getsize)
 # initialize & get common used variables
 com = LabelerVars(debug=debug)
 
-files = ["D:/Downloads/JSON/test.json"]
+#files = ["D:/Downloads/JSON/test.json"]
 
 threads = [] # child threads
 shift = 40
