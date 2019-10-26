@@ -25,7 +25,7 @@ class LabelerVars():
         self.debug = debug
         
 class LCSLabeler():
-    def __init__(self, comVars, root, gold_standard):
+    def __init__(self, comVars, root, gold_standard, fName):
         self.comVars = comVars 
         self.root = root        
         # normalize white space
@@ -39,6 +39,8 @@ class LCSLabeler():
         self.maxZIndex = 0
         # normalize threads
         self.normThreads = []
+        if comVars.debug:
+            self.fileName = fName
     
     def label_driver(self):
         self.getTextNodes(self.root)
@@ -257,7 +259,13 @@ class LCSLabeler():
         
     def normCSS(self, node):
         # color
-        totCharColor = sum(node.CSS_features["color"])
+        try:
+            totCharColor = sum(node.CSS_features["color"])
+        except BaseException as err:
+            if self.comVars.debug:
+                print("@normCSS, src:%s, parent:%s, node:%s" % (
+                    self.fileName, getattr(node.parent, "tag_name", "TEXT_NODE"), 
+                    err))
         try:
             node.CSS_features["color"] = [i/totCharColor 
                                           for i in node.CSS_features["color"]]
@@ -342,7 +350,7 @@ def labelAPage(comVars, fName):
                              encoding = "utf-8").read()
         # start labeling
         str_cvrt = datetime.datetime.now()
-        lbler = LCSLabeler(comVars, root, gold_standard)
+        lbler = LCSLabeler(comVars, root, gold_standard, fName)
         lbler.label_driver()
         end_cvrt = datetime.datetime.now()        
         # export as JSON file    
