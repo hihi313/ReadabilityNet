@@ -1,6 +1,7 @@
-import numpy, os, threading, FeaturesTree as ft
+import numpy as np, os, threading, FeaturesTree as ft
 from anytree.importer import JsonImporter
 from collections import OrderedDict
+from cProfile import label
 
 debug = True
 printMutex = threading.Lock()
@@ -27,18 +28,20 @@ def extract(node, xTrain, yTrain):
                     printMutex.release()
         # CSS derive features
         features = features + list(node.CSS_derive_features.values())
-        return (features, node.label, node.similarity)
+        # append to input data arrays
+        dataMutex.acquire()
+        xTrain.append(features)
+        yTrain.append(node.label)#yTrain.append(node.similarity)
+        dataMutex.release()
     # traverse downward        
     threads = []
     for child in node.children:
-        cThread = threading.Thread(target=extract, args=(child,))
+        cThread = threading.Thread(target=extract, args=(child, xTrain, yTrain,))
         cThread.start()
         threads.append(cThread)
     for t in threads:
         t.join()
         
-
-
 labeledPath = "D:/Downloads/labeled_JSON/"
 
 files = []
@@ -53,15 +56,18 @@ files = sorted(files, key=os.path.getsize)
 xTrain = []
 yTrain = []
 
+threads = []
 for f in files:
     importer = JsonImporter(object_pairs_hook = OrderedDict)
     root = importer.read(open(f, encoding="utf-8"))
     thread = threading.Thread(target=extract, args=(root, xTrain, yTrain,))
     thread.start()
-    thread.join()
-    '''
-    for c in root.children:
-        print(c.tagName)
-        if c.type == ft.Type.FEATURES_TAG:
-            print(type(c.DOM_features))
-    '''
+    threads.append(thread)
+for t in threads:
+    t.join()
+    
+xTrain = np.array(xTrain)
+yTrain = np.array(yTrain)
+
+np.save(labeledPath + "xTrain.npy", xTrain)
+np.save(labeledPath + "yTrain.npy", yTrain)
