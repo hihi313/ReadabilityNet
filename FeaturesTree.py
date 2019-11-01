@@ -542,10 +542,8 @@ class FeaturesTree():
 
     def getDisplay(self, fNode, tmp):
         d = self.comVars.display.copy()
-        try:
+        if tmp["display"] in d:
             d[tmp["display"]] = 1
-        except KeyError:
-            pass
         fNode.CSS_features["display"] = list(d.values())
 
     def getFontFamily(self, fNode, tmp):
@@ -562,21 +560,18 @@ class FeaturesTree():
         '''
         fDict = self.comVars.fonts.copy()
         for f in ff_arr:        
-            try:
+            if f in fDict[f]:
                 fDict[f] = 1
                 break
-            except KeyError:
-                pass
         '''
         general fonts 1/0 array, find which generic font in font-family is
         present. The last one in ff_arr is usually generic font name
         '''
         gfDict = self.comVars.gfonts.copy()
-        try:
+        if ff_arr[-1] in gfDict:
             gfDict[ff_arr[-1]] = 1
-        except KeyError:
-            pass
-        fNode.CSS_features["fontFamily"] = list(fDict.values()) + list(gfDict.values()) 
+        #fNode.CSS_features["fontFamily"] = list(fDict.values()) + list(gfDict.values()) 
+        fNode.CSS_features["fontFamily"] = list(gfDict.values()) 
 
     def getSelfFontSize(self, node):
         fontSize = float(re.sub(self.comVars.length_re, "", 
@@ -673,10 +668,8 @@ class FeaturesTree():
 
     def getPosition(self, fNode, tmp):
         p = self.comVars.position.copy()
-        try:
+        if tmp["position"] in p:
             p[tmp["position"]] = 1
-        except KeyError:
-            pass
         fNode.CSS_features["position"] = list(p.values())
 
     #show = webelement.is_displaed()
