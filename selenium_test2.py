@@ -61,7 +61,7 @@ if __name__ == '__main__':
                          "./jquery.js",
                          debug = False)
     
-    #files = ["D:/Downloads/dragnet_data-master/HTML/test.html"]
+    files = files[0:500]#["D:/Downloads/dragnet_data-master/HTML/test.html"]
     '''
     for i in files[1230:]:
         print(i, files.index(i))
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     threads = [] # child threads
     shift = 5
-    start = 1251
+    start = 0
     end = start + shift
     while(files[start:end]):            
         for f in files[start:end]:

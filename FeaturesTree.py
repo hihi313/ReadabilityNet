@@ -560,7 +560,7 @@ class FeaturesTree():
         '''
         fDict = self.comVars.fonts.copy()
         for f in ff_arr:        
-            if f in fDict[f]:
+            if f in fDict:
                 fDict[f] = 1
                 break
         '''
