@@ -64,6 +64,7 @@ def extract(node, fName):
                           (err, fName, node.parent, node))
         
 labeledPath = "D:/Downloads/labeled_JSON/"
+npyPath = "D:/Downloads/NPY/"
 fileIndex = 1
 N = 100000
 
@@ -75,7 +76,6 @@ for f in os.listdir(labeledPath):
 # sort by size
 files = sorted(files, key=os.path.getsize)
 files = files[19:20]#["D:/Downloads/labeled_JSON/R427_labeled.json"]
-
 
 threads = []
 for f in files:
@@ -101,9 +101,10 @@ for f in files:
             pass
         #'''
     features = []
+    labels = []
     if len(xTrain) > N:
-        np.save(labeledPath + "xTrain%d.npy" % (fileIndex), np.array(xTrain))
-        np.save(labeledPath + "yTrain%d.npy" % (fileIndex), np.array(yTrain))
+        np.save(npyPath + "xTrain%d.npy" % (fileIndex), np.array(xTrain))
+        np.save(npyPath + "yTrain%d.npy" % (fileIndex), np.array(yTrain))
         fileIndex = fileIndex + 1
         xTrain = []
         yTrain = []
@@ -112,5 +113,5 @@ for f in files:
 print("done")    
     
 # store the remaining data
-np.save(labeledPath + "xTrain%d.npy" % (fileIndex), np.array(xTrain))
-np.save(labeledPath + "yTrain%d.npy" % (fileIndex), np.array(yTrain))
+np.save(npyPath + "xTrain%d.npy" % (fileIndex), np.array(xTrain))
+np.save(npyPath + "yTrain%d.npy" % (fileIndex), np.array(yTrain))
