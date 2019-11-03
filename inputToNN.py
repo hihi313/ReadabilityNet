@@ -37,12 +37,12 @@ def extract(node, fName):
             del node.CSS_features["fontFamily"]
             CSSFeatures = node.CSS_features.values()
             for f in CSSFeatures:
+                if f == None:
+                        raise NoneTypeError("None type occure")
                 try:
                     nodeFeatures = nodeFeatures + f
                 except TypeError as err:
-                    nodeFeatures = nodeFeatures + [f]
-                    if f == None:
-                        raise NoneTypeError("None type occure")
+                    nodeFeatures = nodeFeatures + [f]                    
             # CSS derive features
             nodeFeatures = nodeFeatures + list(node.CSS_derive_features.values())
             # check if there is None
