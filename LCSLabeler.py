@@ -264,8 +264,8 @@ class LCSLabeler():
         except BaseException as err:
             if self.comVars.debug:
                 print("@normCSS, src:%s, parent:%s, node:%s" % (
-                    self.fileName, getattr(node.parent, "tag_name", "TEXT_NODE"), 
-                    err))
+                    self.fileName, node.parent.tagName,  
+                    getattr(node, "tagName", "TEXT_NODE"), err))
         try:
             node.CSS_features["color"] = [i/totCharColor 
                                           for i in node.CSS_features["color"]]

@@ -61,14 +61,14 @@ if __name__ == '__main__':
                          "./jquery.js",
                          debug = False)
     
-    files = files[0:500]#["D:/Downloads/dragnet_data-master/HTML/test.html"]
+    files = files[-41:]#["D:/Downloads/dragnet_data-master/HTML/test.html"]
     '''
     for i in files[1230:]:
         print(i, files.index(i))
     '''
 
     threads = [] # child threads
-    shift = 5
+    shift = 1
     start = 0
     end = start + shift
     while(files[start:end]):            
@@ -77,12 +77,12 @@ if __name__ == '__main__':
             fName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', f))
             # whether the JSON file exist
             if not os.path.exists(jsonPath + fName + ".json"):
-                print("processing:", htmlPath + fName + ".html")
+                print(files.index(f), "processing:", htmlPath + fName + ".html")
                 thread = threading.Thread(target=convertAPage, args=(com, fName,))
                 thread.start()
                 threads.append(thread)
             else:
-                print("skip:", fName)
+                print(files.index(f), "skip:", fName)
         for t in threads:
             t.join()
         start = end

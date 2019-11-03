@@ -45,6 +45,9 @@ def extract(node, fName):
                         raise NoneTypeError("None type occure")
             # CSS derive features
             nodeFeatures = nodeFeatures + list(node.CSS_derive_features.values())
+            # check if there is None
+            if None in features:
+                raise NoneTypeError("None type in features")
             # append to input data arrays
             with dataMutex:
                 features.append(nodeFeatures)
