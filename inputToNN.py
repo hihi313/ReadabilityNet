@@ -8,7 +8,7 @@ class CustomError(Exception):
 debug = True
 printMutex = threading.Lock()
 dataMutex = threading.Lock()
-N = 107 # number of features in final result (no normalize)
+nodeFeaturesLen = 107 # number of features in final result (no normalize)
 
 features = []
 labels = []
@@ -16,7 +16,7 @@ xTrain = []
 yTrain = []
 
 def extract(node, fName):
-    global dataMutex, printMutex, features, labels, N
+    global dataMutex, printMutex, features, labels, nodeFeaturesLen
     # traverse downward        
     threads = []
     for child in node.children:
@@ -45,11 +45,12 @@ def extract(node, fName):
             # CSS derive features
             nodeFeatures = nodeFeatures + list(node.CSS_derive_features.values())
             # check if there is None
-            if None in features:
+            if None in nodeFeatures:
                 raise CustomError("None type in features")
             # check the features length
-            if len(features) > N:
-                raise CustomError("node's feature's length inconsistent")
+            if len(nodeFeatures) > nodeFeaturesLen -1:
+                raise CustomError("node's feature's dim inconsistent:%d" %
+                                  (len(nodeFeatures)))
             # append to input data arrays
             with dataMutex:
                 features.append(nodeFeatures)
@@ -65,7 +66,7 @@ def extract(node, fName):
             if debug:
                 with printMutex:
                     print("ERROR:%s, file:%s, parent:%s, node:%s" % 
-                          (err, fName, node.parent, node))
+                          (err, fName, node.parent.tagName, node))
         
 labeledPath = "D:/Downloads/labeled_JSON/"
 npyPath = "D:/Downloads/NPY/"
