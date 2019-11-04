@@ -48,7 +48,7 @@ def extract(node, fName):
             if None in nodeFeatures:
                 raise CustomError("None type in features")
             # check the features length
-            if len(nodeFeatures) > nodeFeaturesLen -1:
+            if len(nodeFeatures) > nodeFeaturesLen:
                 raise CustomError("node's feature's dim inconsistent:%d" %
                                   (len(nodeFeatures)))
             # append to input data arrays
