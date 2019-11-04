@@ -33,8 +33,6 @@ def extract(node, fName):
             # DOM derive features
             nodeFeatures = nodeFeatures + list(node.DOM_derive_features.values())
             # CSS features
-            # fontFamily length inconsist cross file, delete it
-            del node.CSS_features["fontFamily"]
             CSSFeatures = node.CSS_features.values()
             for f in CSSFeatures:
                 if f == None:
@@ -52,10 +50,12 @@ def extract(node, fName):
             with dataMutex:
                 features.append(nodeFeatures)
                 labels.append(node.label)
+                '''
                 if debug:
                     print(features.index(nodeFeatures), 
                           "parent:%s, node:%s %s" % 
                           (node.parent.tagName, node.tagName, node))
+                '''
         except NoneTypeError as err:
             # ignore None data
             if debug:
@@ -75,7 +75,7 @@ for f in os.listdir(labeledPath):
         files.append(p)
 # sort by size
 files = sorted(files, key=os.path.getsize)
-files = files[19:20]#["D:/Downloads/labeled_JSON/R427_labeled.json"]
+#files = files[19:20]#["D:/Downloads/labeled_JSON/R427_labeled.json"]
 
 threads = []
 for f in files:
@@ -89,7 +89,7 @@ for f in files:
         print("features.shape:", np.array(features).shape)
         print("xTrain.shape:", np.array(xTrain).shape)
         print("yTrain.shape:", np.array(yTrain).shape)
-        #'''
+        '''
         for i in range(len(features)):
             print("len(feature[%d]):" % (i), len(features[i]))
         for i in range(len(xTrain)):
@@ -99,7 +99,7 @@ for f in files:
                 print("len(yTrain[%d]):" % (i), len(yTrain[i]))
         except TypeError:
             pass
-        #'''
+        '''
     features = []
     labels = []
     if len(xTrain) > N:
