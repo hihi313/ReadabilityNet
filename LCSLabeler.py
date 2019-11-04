@@ -48,10 +48,10 @@ class LCSLabeler():
                                reverse=True)
         self.labelTextNodes()
         self.DFT(self.body, None)
-        self.normalize(self.body)
+        #self.normalize(self.body)
         # wait until all normalize job finish
-        for t in self.normThreads:
-            t.join()
+        #for t in self.normThreads:
+        #    t.join()
     
     def getTextNodes(self, node):
         # text nodes

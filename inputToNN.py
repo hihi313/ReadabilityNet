@@ -80,7 +80,8 @@ files = sorted(files, key=os.path.getsize)
 threads = []
 for f in files:
     importer = JsonImporter(object_pairs_hook = OrderedDict)
-    root = importer.read(open(f, encoding="utf-8"))
+    with open(f, encoding="utf-8") as j:
+        root = importer.read(j)
     print(files.index(f), "processing:", f)
     extract(root, f)    
     xTrain = xTrain + features
