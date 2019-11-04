@@ -2,12 +2,13 @@ import numpy as np, os, threading, FeaturesTree as ft
 from anytree.importer import JsonImporter
 from collections import OrderedDict
 
-class NoneTypeError(Exception):
+class CustomError(Exception):
     pass
 
 debug = True
 printMutex = threading.Lock()
 dataMutex = threading.Lock()
+N = 107 # number of features in final result (no normalize)
 
 features = []
 labels = []
@@ -15,7 +16,7 @@ xTrain = []
 yTrain = []
 
 def extract(node, fName):
-    global dataMutex, printMutex, features, labels
+    global dataMutex, printMutex, features, labels, N
     # traverse downward        
     threads = []
     for child in node.children:
@@ -36,7 +37,7 @@ def extract(node, fName):
             CSSFeatures = node.CSS_features.values()
             for f in CSSFeatures:
                 if f == None:
-                        raise NoneTypeError("None type occure")
+                        raise CustomError("None type occure")
                 try:
                     nodeFeatures = nodeFeatures + f
                 except TypeError as err:
@@ -45,7 +46,10 @@ def extract(node, fName):
             nodeFeatures = nodeFeatures + list(node.CSS_derive_features.values())
             # check if there is None
             if None in features:
-                raise NoneTypeError("None type in features")
+                raise CustomError("None type in features")
+            # check the features length
+            if len(features) > N:
+                raise CustomError("node's feature's length inconsistent")
             # append to input data arrays
             with dataMutex:
                 features.append(nodeFeatures)
@@ -56,7 +60,7 @@ def extract(node, fName):
                           "parent:%s, node:%s %s" % 
                           (node.parent.tagName, node.tagName, node))
                 '''
-        except NoneTypeError as err:
+        except CustomError as err:
             # ignore None data
             if debug:
                 with printMutex:
