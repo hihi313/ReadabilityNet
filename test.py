@@ -238,7 +238,7 @@ rgba = [float(x[0]) for x in re.findall(
 print(node.value_of_css_property('color'))
 driver.close()
 '''
-
+'''
 distances = {k: manhattan([k], [21]) for k, v in com.fontSize.items()}
 
 print(distances)
@@ -246,3 +246,43 @@ print(min(distances, key = distances.get))
 
 for k in com.fontSize:
     print(k, com.fontSize[k])
+'''
+import pandas as pd
+import numpy as np
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
+
+colNames = ["n_char", "n_link", "n_link_char", "n_node", "n_tag", "negAttrPoint", 
+            "posAttrPoint", "negTagPoint", "posTagPoint", "CNR", "DS", "LD", 
+            "TaD", "TD", "backgroundColor_R", "backgroundColor_G", 
+            "backgroundColor_B", "backgroundColor_A", "borderWidth_U", 
+            "borderWidth_R", "borderWidth_B", "borderWidth_L", "color_R", 
+            "color_O", "color_Y", "color_G", "color_B", "color_P", "color_BL", 
+            "color_GR", "color_W", "display_block", "display_contents", 
+            "display_flex", "display_grid", "display_inline", 
+            "display_inline-block", "display_inline-flex", "display_inline-grid", 
+            "display_inline-table", "display_list-item", "display_table", 
+            "display_table-caption", "display_table-cell", "display_table-column", 
+            "display_table-column-group", "display_table-footer-group", 
+            "display_table-header-group", "display_table-row", 
+            "display_table-row-group", 
+            "gfont_serif", "gfont_sans-serif", "gfont_monospace", "gfont_cursive", "gfont_fantasy", "gfont_system-ui", "gfont_emoji", "gfont_math", "gfont_fangsong", 
+            "fontSize_9", "fontSize_10", "fontSize_11", "fontSize_12", "fontSize_13", "fontSize_14", "fontSize_15", "fontSize_16", "fontSize_17", "fontSize_18", "fontSize_20", "fontSize_22", "fontSize_24", "fontSize_26", "fontSize_28", "fontSize_30", "fontSize_32", "fontSize_34", "fontSize_36", "fontSize_40", "fontSize_44", "fontSize_48", "fontSize_56", "fontSize_64", "fontSize_72", 
+            "height", "lineHeight", "margin_T", "margin_R", "margin_B", "margin_L", 
+            "padding_T", "padding_R", "padding_B", "padding_L", "position_static", "position_absolute", "position_fixed", "position_relative", "position_sticky", "width", "zIndex", "area", "bottom", "right", 
+            "show", "x", "y", "yTrain_label"]
+print(len(colNames))
+
+data = pd.read_csv("D:\Downloads\webPageData_all.csv", header=None, names=colNames)
+X = data.iloc[:,0:107]  #independent columns
+print(len(X[0]))
+y = data.iloc[:,-1]    #target column i.e price range#apply SelectKBest class to extract top 10 best features
+bestfeatures = SelectKBest(score_func=chi2, k=10)
+fit = bestfeatures.fit(X,y)
+dfscores = pd.DataFrame(fit.scores_)
+dfcolumns = pd.DataFrame(X.columns)
+#concat two dataframes for better visualization 
+featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+featureScores.columns = ['Specs','Score']  #naming the dataframe columns
+print(featureScores.nlargest(10,'Score'))  #print 10 best features
+

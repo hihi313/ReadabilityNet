@@ -48,10 +48,10 @@ class LCSLabeler():
                                reverse=True)
         self.labelTextNodes()
         self.DFT(self.body, None)
-        #self.normalize(self.body)
+        self.normalize(self.body)
         # wait until all normalize job finish
-        #for t in self.normThreads:
-        #    t.join()
+        for t in self.normThreads:
+            t.join()
     
     def getTextNodes(self, node):
         # text nodes
@@ -203,17 +203,17 @@ class LCSLabeler():
                     c[i][j] = max(c[i - 1][j], c[i][j - 1])
         return c[m][n]
     
-    def normalize(self, node):
+    def normalize(self, node):        
+        for child in node.children:
+            cThread = threading.Thread(target=self.normalize, args=(child,))
+            cThread.start()    
+            self.normThreads.append(cThread)
         # FEATURES_TAG & FEATURES_TEXT
         if node.type != ft.Type.TAG:
-            for child in node.children:
-                cThread = threading.Thread(target=self.normalize, args=(child,))
-                cThread.start()    
-                self.normThreads.append(cThread)
             # normalize DOM raw features
-            normDOMThread = threading.Thread(target=self.normDOM, args=(node,))
-            normDOMThread.start()
-            self.normThreads.append(normDOMThread)
+            #normDOMThread = threading.Thread(target=self.normDOM, args=(node,))
+            #normDOMThread.start()
+            #self.normThreads.append(normDOMThread)
             # only FEATURES_TAG
             if node.type == ft.Type.FEATURES_TAG:
                 # normalize CSS features
@@ -221,9 +221,9 @@ class LCSLabeler():
                 normCSSThread.start()
                 normCSSThread.join() # need to norm before add adjust value
                 # add adjust value
-                adjThread = threading.Thread(target=self.addAdj, args=(node,))
-                adjThread.start()
-                self.normThreads.append(adjThread)
+                #adjThread = threading.Thread(target=self.addAdj, args=(node,))
+                #adjThread.start()
+                #self.normThreads.append(adjThread)
         
     def normDOM(self, node):
         try:
@@ -258,6 +258,7 @@ class LCSLabeler():
             pass
         
     def normCSS(self, node):
+        '''
         # color
         try:
             totCharColor = sum(node.CSS_features["color"])
@@ -281,6 +282,7 @@ class LCSLabeler():
         # line height
         node.CSS_features["lineHeight"] = (node.CSS_features["lineHeight"]
                                            / self.body.CSS_features["lineHeight"])
+        
         # border top/right/bottom/left width
         width = node.CSS_features["width"]
         try:
@@ -288,10 +290,11 @@ class LCSLabeler():
                                                 for i in node.CSS_features["borderWidth"]]
         except ZeroDivisionError:
             pass
-        # margin width
+        '''
         try:
             docHeight = self.root.dimension[0]
             docWidth = self.root.dimension[1]
+            # margin width
             margin = node.CSS_features["margin"]
             node.CSS_features["margin"] = [margin[0]/docHeight, margin[1]/docWidth,
                                            margin[2]/docHeight, margin[3]/docWidth]
@@ -315,6 +318,7 @@ class LCSLabeler():
                                                   / docWidth)
         except ZeroDivisionError:
             pass
+        '''
         # background color
         node.CSS_features["backgroundColor"] = [i/255 for i in node.CSS_features[
                                                     "backgroundColor"]]
@@ -324,6 +328,7 @@ class LCSLabeler():
                                            / self.maxZIndex)
         except ZeroDivisionError:
             pass
+        '''
      
     # add adjust value and save at CSS_derive_features   
     def addAdj(self, node):
