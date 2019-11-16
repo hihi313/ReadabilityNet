@@ -345,6 +345,7 @@ debug = True
 correctPath = "D:/Downloads/dragnet_data-master/Corrected/"
 jsonPath = "D:/Downloads/JSON/"
 labeledPath = "D:/Downloads/labeled_JSON/"
+fileName_suffix = "_labeled_norm"
 
 def labelAPage(comVars, fName):
     try:
@@ -360,14 +361,14 @@ def labelAPage(comVars, fName):
         end_cvrt = datetime.datetime.now()        
         # export as JSON file    
         exporter = JsonExporter(indent=2)
-        with open(labeledPath + fName + "_labeled.json", "w") as f:
+        with open(labeledPath + fName + fileName_suffix + ".json", "w") as f:
             f.write(exporter.export(root))
             # print duration time
             print(f.name, "takes:", end_cvrt - str_cvrt)
             f.close()
         # export degugging log
         if comVars.debug:
-            with open(labeledPath + "log/" + fName + "_labeled.log", "w", 
+            with open(labeledPath + "log/" + fName + fileName_suffix + ".log", "w", 
                       encoding = 'utf8') as f:
                 for pre, _, node in RenderTree(root):
                     treestr = u"%s%s" % (pre, getattr(node, "tagName", "STRING"))
@@ -408,7 +409,7 @@ while(files[start:end]):
     for f in files[start:end]:
         # check whether the file has been processed
         fName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', f))
-        if not os.path.exists(labeledPath + fName + "_labeled.json"):
+        if not os.path.exists(labeledPath + fName + fileName_suffix + ".json"):
             print("processing:", jsonPath + fName + ".json")
             thread = threading.Thread(target=labelAPage, args=(com, fName))
             thread.start()
