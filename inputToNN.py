@@ -53,8 +53,11 @@ def extract(node, fName):
                                   (len(nodeFeatures)))
             # append to input data arrays
             with dataMutex:
-                features.append(nodeFeatures)
-                labels.append(node.label)
+                try:
+                    labels.append(node.label)
+                    features.append(nodeFeatures)
+                except BaseException:
+                    raise CustomError("Error or no label")
                 '''
                 if debug:
                     print(features.index(nodeFeatures), 
