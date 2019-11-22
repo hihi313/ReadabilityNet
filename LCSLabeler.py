@@ -17,7 +17,7 @@ class LabelerVars():
     def __init__(self, debug = False):
         # REGEX
         self.space_re = "\s+"
-        self.after_comment_re = "!@#\$%\^&\*\(\)\s+COMMENTS[\s\S]*"
+        self.after_comment_re = "!@#\$%\^&\*\(\)\s+COMMENTS"
         # threshold 
         self.label_th = 0.9
         self.shortText_th = 120
