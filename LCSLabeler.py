@@ -122,7 +122,12 @@ class LCSLabeler():
             try:
                 node.similarity = node.n_match/node.DOM_features["n_char"]                
             except ZeroDivisionError:
-                node.similarity = 0            
+                node.similarity = 0 
+            except BaseException as err:
+                print("ERROR:", fName)
+                with open(labeledPath + "log/ERROR.log", "a", encoding = 'utf8') as f:
+                    f.write(u"json:%s,\tError:%s,\t@DFT\n" % (fName, err))
+                    f.close()           
             # labeling & collect for parent
             try:
                 pCollector["n_match"] += collector["n_match"]
@@ -144,7 +149,7 @@ class LCSLabeler():
                 else:
                     node.label = Label.POSITIVE
             # find the max properties values for normalize stage
-            self.maxZIndex = max(self.maxZIndex, node.CSS_features["zIndex"])
+            #self.maxZIndex = max(self.maxZIndex, node.CSS_features["zIndex"])
         elif node.type == ft.Type.FEATURES_TEXT:
             try:
                 pCollector["n_match"] += node.n_match
@@ -318,6 +323,11 @@ class LCSLabeler():
                                                   / docWidth)
         except ZeroDivisionError:
             pass
+        except BaseException as err:
+            print("ERROR:", fName)
+            with open(labeledPath + "log/ERROR.log", "a", encoding = 'utf8') as f:
+                f.write(u"json:%s,\tError:%s,\t@normCSS\n" % (fName, err))
+                f.close()
         '''
         # background color
         node.CSS_features["backgroundColor"] = [i/255 for i in node.CSS_features[
@@ -342,9 +352,9 @@ class LCSLabeler():
 
 # debug flag
 debug = True
-correctPath = "D:/Downloads/dragnet_data-master/Corrected/"
-jsonPath = "D:/Downloads/JSON/"
-labeledPath = "D:/Downloads/labeled_JSON/"
+correctPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_goldStandard/"
+jsonPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_JSON/"
+labeledPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_labeled_JSON_norm/"
 fileName_suffix = "_labeled_norm"
 
 def labelAPage(comVars, fName):
@@ -352,7 +362,7 @@ def labelAPage(comVars, fName):
         # open files
         importer = JsonImporter(object_pairs_hook = OrderedDict)
         root = importer.read(open(jsonPath + fName + ".json", encoding="utf-8"))
-        gold_standard = open(correctPath + fName + ".html.corrected.txt", "r", 
+        gold_standard = open(correctPath + fName + ".txt", "r", 
                              encoding = "utf-8").read()
         # start labeling
         str_cvrt = datetime.datetime.now()
@@ -399,10 +409,11 @@ files = sorted(files, key=os.path.getsize)
 # initialize & get common used variables
 com = LabelerVars(debug=debug)
 
-#files = ["D:/Downloads/JSON/test.json"]
+#jsons = []
+#files = [jsonPath + j for j in jsons]
 
 threads = [] # child threads
-shift = 40
+shift = 5
 start = 0
 end = start + shift
 while(files[start:end]):            

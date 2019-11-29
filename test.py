@@ -4,6 +4,8 @@ from os import listdir
 from os.path import isfile, join
 from selenium import webdriver
 from dis import dis
+from lxml import html
+from lxml.cssselect import CSSSelector
 
 # common used variables
 class CommonVars():
@@ -247,6 +249,7 @@ print(min(distances, key = distances.get))
 for k in com.fontSize:
     print(k, com.fontSize[k])
 '''
+'''
 import pandas as pd
 import numpy as np
 from sklearn.feature_selection import SelectKBest
@@ -285,4 +288,57 @@ dfcolumns = pd.DataFrame(X.columns)
 featureScores = pd.concat([dfcolumns,dfscores],axis=1)
 featureScores.columns = ['Specs','Score']  #naming the dataframe columns
 print(featureScores.nlargest(10,'Score'))  #print 10 best features
+'''
+    
+jsons = ["102.json", 
+"109.json", 
+"116.json", 
+"145.json", 
+"67.json", 
+"134.json", 
+"85.json", 
+"35.json", 
+"142.json", 
+"152.json", 
+"103.json", 
+"94.json", 
+"58.json", 
+"79.json", 
+"88.json", 
+"78.json", 
+"106.json", 
+"128.json", 
+"69.json", 
+"19.json", 
+"20.json", 
+"151.json", 
+"99.json", 
+"119.json", 
+"49.json", 
+"54.json", 
+"14.json", 
+"141.json", 
+"117.json", 
+"42.json", 
+"160.json", 
+"143.json", 
+"97.json", 
+"30.json", 
+"27.json", 
+"60.json", 
+"158.json", 
+"172.json", 
+"28.json", 
+"170.json", 
+"108.json", 
+"39.json", 
+"153.json"]
+for j in jsons:
+    try:
+        file = open("D:/Downloads/dragnet_data-master/JSON/" + j, "rb").read()#errors="ignore").read()
+        string = file.decode("utf-8")
+    except BaseException as err:
+        print("file:", j, "ERROR:", err)
+print("done")
+
 

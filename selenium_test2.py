@@ -8,8 +8,8 @@ from selenium.common import exceptions
 
 import FeaturesTree as ft
 
-htmlPath = "D:/Downloads/dragnet_data-master/HTML/"
-jsonPath = "D:/Downloads/JSON/"
+htmlPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_html/"
+jsonPath = "D:/Downloads/baroni2008cleaneval_dataset/tmp/"
 
 def convertAPage(comVar, fName):
     # start the browser
@@ -61,7 +61,8 @@ if __name__ == '__main__':
                          "./jquery.js",
                          debug = False)
     
-    #files = files[-41:]#["D:/Downloads/dragnet_data-master/HTML/test.html"]
+    htmls = ["568.html"]
+    files = [htmlPath + l for l in htmls]
     '''
     for i in files[1230:]:
         print(i, files.index(i))
