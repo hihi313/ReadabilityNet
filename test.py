@@ -333,12 +333,19 @@ jsons = ["102.json",
 "108.json", 
 "39.json", 
 "153.json"]
+import re
 for j in jsons:
     try:
         file = open("D:/Downloads/dragnet_data-master/JSON/" + j, "rb").read()#errors="ignore").read()
         string = file.decode("utf-8")
     except BaseException as err:
         print("file:", j, "ERROR:", err)
+    try:
+        fName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', j))
+        gstd = open("D:/Downloads/dragnet_data-master/Corrected/" + fName + ".txt", "rb").read()#errors="ignore").read()
+        string2 = gstd.decode("utf-8")
+    except BaseException as err:
+        print("gstd:", fName, "ERROR:", err)
 print("done")
 
 

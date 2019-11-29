@@ -352,9 +352,9 @@ class LCSLabeler():
 
 # debug flag
 debug = True
-correctPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_goldStandard/"
-jsonPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_JSON/"
-labeledPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_labeled_JSON_norm/"
+correctPath = "D:/Downloads/dragnet_data-master/Corrected/"
+jsonPath = "D:/Downloads/dragnet_data-master/JSON/"
+labeledPath = "D:/Downloads/dragnet_data-master/labeled_JSON_norm/"
 fileName_suffix = "_labeled_norm"
 
 def labelAPage(comVars, fName):
@@ -362,8 +362,8 @@ def labelAPage(comVars, fName):
         # open files
         importer = JsonImporter(object_pairs_hook = OrderedDict)
         root = importer.read(open(jsonPath + fName + ".json", encoding="utf-8"))
-        gold_standard = open(correctPath + fName + ".txt", "r", 
-                             encoding = "utf-8").read()
+        gold_standard = open(correctPath + fName + ".txt", encoding="utf-8",
+                             errors="ignore").read()
         # start labeling
         str_cvrt = datetime.datetime.now()
         lbler = LCSLabeler(comVars, root, gold_standard, fName)
@@ -409,8 +409,50 @@ files = sorted(files, key=os.path.getsize)
 # initialize & get common used variables
 com = LabelerVars(debug=debug)
 
-#jsons = []
-#files = [jsonPath + j for j in jsons]
+jsons = ["102.json", 
+"109.json", 
+"116.json", 
+"145.json", 
+"67.json", 
+"134.json", 
+"85.json", 
+"35.json", 
+"142.json", 
+"152.json", 
+"103.json", 
+"94.json", 
+"58.json", 
+"79.json", 
+"88.json", 
+"78.json", 
+"106.json", 
+"128.json", 
+"69.json", 
+"19.json", 
+"20.json", 
+"151.json", 
+"99.json", 
+"119.json", 
+"49.json", 
+"54.json", 
+"14.json", 
+"141.json", 
+"117.json", 
+"42.json", 
+"160.json", 
+"143.json", 
+"97.json", 
+"30.json", 
+"27.json", 
+"60.json", 
+"158.json", 
+"172.json", 
+"28.json", 
+"170.json", 
+"108.json", 
+"39.json", 
+"153.json"]
+files = [jsonPath + j for j in jsons]
 
 threads = [] # child threads
 shift = 5
