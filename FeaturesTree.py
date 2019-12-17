@@ -321,16 +321,10 @@ class FeaturesTree():
     # traverse child nodes
     def fork(self, node, fNode, collector, info):
         # extract every child by JavaScript (include text node)   
-        threads = [] # child threads
+        #threads = [] # child threads
         for nChild in self.driver.execute_script(self.comVars.childNodesJs, node):
-            # compute the children of f_child features                
-            fChild_thread = threading.Thread(target=self.DFT,
-                                             args=(nChild, fNode, collector,
-                                                   info,))
-            fChild_thread.start()
-            threads.append(fChild_thread)
-        for t in threads:
-            t.join()
+            # compute the children of f_child features  
+            self.DFT(nChild, fNode, collector, info)
 
     def computeFeatures(self, node, fNode, collector, info):
         # compute current element node's features,

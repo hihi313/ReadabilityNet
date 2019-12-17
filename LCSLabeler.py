@@ -17,7 +17,7 @@ class LabelerVars():
     def __init__(self, debug = False):
         # REGEX
         self.space_re = "\s+"
-        self.after_comment_re = "!@#\$%\^&\*\(\)\s+COMMENTS"
+        self.comment_re = "!@#\$%\^&\*\(\)\s+COMMENTS"
         # threshold 
         self.label_th = 0.9
         self.shortText_th = 120
@@ -31,7 +31,7 @@ class LCSLabeler():
         # normalize white space
         tmp_gld = re.sub(self.comVars.space_re, ' ', gold_standard)
         # remove comment
-        self.gold_standard = re.sub(self.comVars.after_comment_re, '', tmp_gld)
+        self.gold_standard = re.sub(self.comVars.comment_re, '', tmp_gld)
         self.lock = threading.Lock()
         self.body = None
         self.textNodes = []
@@ -352,9 +352,9 @@ class LCSLabeler():
 
 # debug flag
 debug = True
-correctPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_goldStandard/"
-jsonPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_JSON/"
-labeledPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_labeled_JSON_norm/"
+correctPath = "D:/Downloads/dragnet_data-master/Corrected/"
+jsonPath = "D:/Downloads/dragnet_data-master/JSON/"
+labeledPath = "D:/Downloads/dragnet_data-master/labeled_JSON_norm/"
 fileName_suffix = "_labeled_norm"
 
 def labelAPage(comVars, fName):
@@ -409,8 +409,8 @@ files = sorted(files, key=os.path.getsize)
 # initialize & get common used variables
 com = LabelerVars(debug=debug)
 
-#jsons = []
-#files = [jsonPath + j for j in jsons]
+jsons = ["109.json"]
+files = [jsonPath + j for j in jsons]
 
 threads = [] # child threads
 shift = 5

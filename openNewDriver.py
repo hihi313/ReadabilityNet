@@ -2,7 +2,7 @@ from selenium import webdriver
 
 if __name__ == '__main__':
     options = webdriver.ChromeOptions()
-    options.add_argument("-headless")
+    #options.add_argument("-headless")
     options.add_argument("--window-position=0,0")
     driver = webdriver.Chrome(options = options)
     #set to offline
