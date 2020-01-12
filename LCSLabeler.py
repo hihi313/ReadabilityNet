@@ -352,9 +352,9 @@ class LCSLabeler():
 
 # debug flag
 debug = True
-correctPath = "D:/Downloads/dragnet_data-master/Corrected/"
-jsonPath = "D:/Downloads/dragnet_data-master/JSON/"
-labeledPath = "D:/Downloads/dragnet_data-master/labeled_JSON_norm/"
+correctPath = "D:/Downloads/dragnet_data-master/dragnet_goldStandard/"
+jsonPath = "D:/Downloads/test/"
+labeledPath = "D:/Downloads/test_labeled/"
 fileName_suffix = "_labeled_norm"
 
 def labelAPage(comVars, fName):
@@ -409,8 +409,8 @@ files = sorted(files, key=os.path.getsize)
 # initialize & get common used variables
 com = LabelerVars(debug=debug)
 
-jsons = ["109.json"]
-files = [jsonPath + j for j in jsons]
+#jsons = ["109.json"]
+#files = [jsonPath + j for j in jsons]
 
 threads = [] # child threads
 shift = 5

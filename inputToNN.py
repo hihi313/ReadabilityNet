@@ -71,8 +71,8 @@ def extract(node, fName):
                     print("ERROR:%s, file:%s, parent:%s, node:%s" % 
                           (err, fName, node.parent.tagName, node))
         
-labeledPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_labeled_JSON_norm/"
-npyPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_NPY_norm/"
+labeledPath = "D:/Downloads/test_labeled/"
+npyPath = "D:/Downloads/test_NPY/"
 fileIndex = 1
 N = 100000
 

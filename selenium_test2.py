@@ -8,8 +8,8 @@ from selenium.common import exceptions
 
 import FeaturesTree as ft
 
-htmlPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_html/"
-jsonPath = "D:/Downloads/baroni2008cleaneval_dataset/cleanEval_JSON/"
+htmlPath = "D:/Downloads/dragnet_data-master/dragnet_html/"
+jsonPath = "D:/Downloads/test/"
 
 def convertAPage(comVar, fName):
     # start the browser
