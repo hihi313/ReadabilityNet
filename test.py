@@ -290,62 +290,24 @@ featureScores.columns = ['Specs','Score']  #naming the dataframe columns
 print(featureScores.nlargest(10,'Score'))  #print 10 best features
 '''
     
-jsons = ["102.json", 
-"109.json", 
-"116.json", 
-"145.json", 
-"67.json", 
-"134.json", 
-"85.json", 
-"35.json", 
-"142.json", 
-"152.json", 
-"103.json", 
-"94.json", 
-"58.json", 
-"79.json", 
-"88.json", 
-"78.json", 
-"106.json", 
-"128.json", 
-"69.json", 
-"19.json", 
-"20.json", 
-"151.json", 
-"99.json", 
-"119.json", 
-"49.json", 
-"54.json", 
-"14.json", 
-"141.json", 
-"117.json", 
-"42.json", 
-"160.json", 
-"143.json", 
-"97.json", 
-"30.json", 
-"27.json", 
-"60.json", 
-"158.json", 
-"172.json", 
-"28.json", 
-"170.json", 
-"108.json", 
-"39.json", 
-"153.json"]
-import re
-for j in jsons:
-    try:
-        file = open("D:/Downloads/dragnet_data-master/JSON/" + j, "rb").read()#errors="ignore").read()
-        string = file.decode("utf-8")
-    except BaseException as err:
-        print("file:", j, "ERROR:", err)
-    try:
-        fName = re.sub("[\s\S]*[\\/]", '', re.sub("\.[\s\S]*", '', j))
-        gstd = open("D:/Downloads/dragnet_data-master/Corrected/" + fName + ".txt", "rb").read()#errors="ignore").read()
-        string2 = gstd.decode("utf-8")
-    except BaseException as err:
-        print("gstd:", fName, "ERROR:", err)
-print("done")
+from selenium.common import exceptions
+# start the browser
+options = webdriver.ChromeOptions()
+#options.add_argument("-headless")
+options.add_argument("--window-position=0,0")
+driver = webdriver.Chrome(options = options)
+#set to offline
+driver.set_network_conditions(offline=True, latency=0, 
+                              throughput=1024 * 1024*1024)
+driver.set_window_size(1920, 1080)    
+str_ld = datetime.datetime.now()
+try:
+    driver.get("file:///D:/Downloads/dragnet_data-master/dragnet_html/T9.html") # convert the HTML
+except exceptions.TimeoutException:
+    # timeout, force stop loading
+    driver.execute_script("window.stop();")
+
+div = driver.find_element_by_css_selector("#BF_WIDGET_1")
+print(div.rect)
 
 
