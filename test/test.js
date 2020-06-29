@@ -1,0 +1,1 @@
+document.getElementById("demo").innerHTML = "\tparagraph has been changed by JavaScript.";

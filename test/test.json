@@ -1,0 +1,979 @@
+{
+  "type": 0,
+  "tagName": "html",
+  "attributes": {
+    "lang": "en"
+  },
+  "dimension": [
+    2010,
+    1523
+  ],
+  "children": [
+    {
+      "type": 0,
+      "tagName": "head",
+      "children": [
+        {
+          "type": 0,
+          "tagName": "meta",
+          "attributes": {
+            "content": "test",
+            "name": "description"
+          }
+        },
+        {
+          "type": 0,
+          "tagName": "title",
+          "children": [
+            {
+              "type": 2,
+              "strValue": "test",
+              "DOM_features": {
+                "n_char": 4,
+                "n_link": 0,
+                "n_link_char": 0,
+                "n_node": 1,
+                "n_tag": 0
+              },
+              "DOM_derive_features": {
+                "CNR": 4,
+                "LD": 0,
+                "TaD": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "tagName": "body",
+      "DOM_features": {
+        "n_char": 126,
+        "n_link": 1,
+        "n_link_char": 4,
+        "n_node": 12,
+        "n_tag": 6,
+        "negAttrPoint": 0,
+        "posAttrPoint": 0,
+        "negTagPoint": 0,
+        "posTagPoint": 1
+      },
+      "DOM_derive_features": {
+        "CNR": 10.5,
+        "DS": 65.33333333333333,
+        "LD": 0.14285714285714285,
+        "TaD": 0.047244094488188976,
+        "TD": 21.0
+      },
+      "CSS_features": {
+        "backgroundColor": [
+          173.0,
+          216.0,
+          230.0,
+          1.0
+        ],
+        "borderWidth": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "color": [
+          0,
+          0,
+          0,
+          0,
+          21,
+          0,
+          105,
+          0,
+          0
+        ],
+        "display": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "fontFamily": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "fontSize": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          91,
+          0,
+          0,
+          0,
+          0,
+          18,
+          0,
+          0,
+          0,
+          17,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "height": 250,
+        "lineHeight": 1.2,
+        "margin": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "padding": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "position": [
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "width": 1523,
+        "zIndex": 0
+      },
+      "CSS_derive_features": {
+        "area": 380750,
+        "bottom": 1760,
+        "right": 0,
+        "show": 1,
+        "x": 0,
+        "y": 0
+      },
+      "children": [
+        {
+          "type": 1,
+          "tagName": "h1",
+          "DOM_features": {
+            "n_char": 17,
+            "n_link": 0,
+            "n_link_char": 0,
+            "n_node": 2,
+            "n_tag": 1,
+            "negAttrPoint": 0,
+            "posAttrPoint": 0,
+            "negTagPoint": 0,
+            "posTagPoint": 0
+          },
+          "DOM_derive_features": {
+            "CNR": 8.5,
+            "DS": 0,
+            "LD": 0.0,
+            "TaD": 0.05555555555555555,
+            "TD": 17.0
+          },
+          "CSS_features": {
+            "backgroundColor": [
+              173.0,
+              216.0,
+              230.0,
+              1.0
+            ],
+            "borderWidth": [
+              10.0,
+              10.0,
+              10.0,
+              10.0
+            ],
+            "color": [
+              0,
+              0,
+              0,
+              0,
+              17,
+              0,
+              0,
+              0,
+              0
+            ],
+            "display": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "fontFamily": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "fontSize": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              17,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "height": 140,
+            "lineHeight": 1.2,
+            "margin": [
+              0.0,
+              541.6,
+              0.0,
+              541.6
+            ],
+            "padding": [
+              10.0,
+              10.0,
+              10.0,
+              10.0
+            ],
+            "position": [
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "width": 440,
+            "zIndex": 0
+          },
+          "CSS_derive_features": {
+            "area": 61600,
+            "bottom": 1870,
+            "right": 541.3999633789062,
+            "show": 0,
+            "x": 541.6000366210938,
+            "y": 0
+          },
+          "children": [
+            {
+              "type": 2,
+              "strValue": "This is a heading",
+              "DOM_features": {
+                "n_char": 17,
+                "n_link": 0,
+                "n_link_char": 0,
+                "n_node": 1,
+                "n_tag": 0
+              },
+              "DOM_derive_features": {
+                "CNR": 17,
+                "LD": 0,
+                "TaD": 0
+              }
+            }
+          ]
+        },
+        {
+          "type": 1,
+          "tagName": "h2",
+          "DOM_features": {
+            "n_char": 18,
+            "n_link": 0,
+            "n_link_char": 0,
+            "n_node": 2,
+            "n_tag": 1,
+            "negAttrPoint": 0,
+            "posAttrPoint": 0,
+            "negTagPoint": 0,
+            "posTagPoint": 0
+          },
+          "DOM_derive_features": {
+            "CNR": 9.0,
+            "DS": 0,
+            "LD": 0.0,
+            "TaD": 0.05263157894736842,
+            "TD": 18.0
+          },
+          "CSS_features": {
+            "backgroundColor": [
+              173.0,
+              216.0,
+              230.0,
+              1.0
+            ],
+            "borderWidth": [
+              10.0,
+              10.0,
+              10.0,
+              10.0
+            ],
+            "color": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              18,
+              0,
+              0
+            ],
+            "display": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "fontFamily": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "fontSize": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              18,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "height": 100,
+            "lineHeight": 1.2,
+            "margin": [
+              10.0,
+              10.0,
+              10.0,
+              10.0
+            ],
+            "padding": [
+              10.0,
+              10.0,
+              10.0,
+              10.0
+            ],
+            "position": [
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "width": 400,
+            "zIndex": 0
+          },
+          "CSS_derive_features": {
+            "area": 40000,
+            "bottom": 1760,
+            "right": 1113,
+            "show": 1,
+            "x": 10,
+            "y": 150
+          },
+          "children": [
+            {
+              "type": 2,
+              "strValue": "This is a heading2",
+              "DOM_features": {
+                "n_char": 18,
+                "n_link": 0,
+                "n_link_char": 0,
+                "n_node": 1,
+                "n_tag": 0
+              },
+              "DOM_derive_features": {
+                "CNR": 18,
+                "LD": 0,
+                "TaD": 0
+              }
+            }
+          ]
+        },
+        {
+          "type": 1,
+          "tagName": "div",
+          "DOM_features": {
+            "n_char": 91,
+            "n_link": 1,
+            "n_link_char": 4,
+            "n_node": 7,
+            "n_tag": 3,
+            "negAttrPoint": 0,
+            "posAttrPoint": 0,
+            "negTagPoint": 0,
+            "posTagPoint": 1
+          },
+          "DOM_derive_features": {
+            "CNR": 13.0,
+            "DS": 46.0,
+            "LD": 0.25,
+            "TaD": 0.03260869565217391,
+            "TD": 30.333333333333332
+          },
+          "CSS_features": {
+            "backgroundColor": [
+              197.6,
+              151.2,
+              161.0,
+              1.0
+            ],
+            "borderWidth": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "color": [
+              0,
+              0,
+              0,
+              0,
+              4,
+              0,
+              87,
+              0,
+              0
+            ],
+            "display": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "fontFamily": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "fontSize": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              91,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "height": 2000,
+            "lineHeight": 1.2,
+            "margin": [
+              10.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "padding": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "position": [
+              0,
+              1,
+              0,
+              0,
+              0
+            ],
+            "width": 271,
+            "zIndex": 0
+          },
+          "CSS_derive_features": {
+            "area": 542000,
+            "bottom": 0,
+            "right": 1252,
+            "show": 1,
+            "x": 0,
+            "y": 10
+          },
+          "children": [
+            {
+              "type": 1,
+              "tagName": "a",
+              "DOM_features": {
+                "n_char": 4,
+                "n_link": 1,
+                "n_link_char": 4,
+                "n_node": 2,
+                "n_tag": 1,
+                "negAttrPoint": 0,
+                "posAttrPoint": 0,
+                "negTagPoint": 0,
+                "posTagPoint": 0
+              },
+              "DOM_derive_features": {
+                "CNR": 2.0,
+                "DS": 0,
+                "LD": 0.5,
+                "TaD": 0.2,
+                "TD": 4.0
+              },
+              "CSS_features": {
+                "backgroundColor": [
+                  197.6,
+                  151.2,
+                  161.0,
+                  1.0
+                ],
+                "borderWidth": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "color": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  4,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "display": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fontFamily": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fontSize": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  4,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "height": 18,
+                "lineHeight": 1.2,
+                "margin": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "padding": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "position": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "width": 24,
+                "zIndex": 0
+              },
+              "CSS_derive_features": {
+                "area": 432,
+                "bottom": 1982,
+                "right": 1499,
+                "show": 1,
+                "x": 0,
+                "y": 10
+              },
+              "children": [
+                {
+                  "type": 2,
+                  "strValue": "link",
+                  "DOM_features": {
+                    "n_char": 4,
+                    "n_link": 0,
+                    "n_link_char": 0,
+                    "n_node": 1,
+                    "n_tag": 0
+                  },
+                  "DOM_derive_features": {
+                    "CNR": 4,
+                    "LD": 0,
+                    "TaD": 0
+                  }
+                }
+              ]
+            },
+            {
+              "type": 2,
+              "strValue": " before the paragraph. ",
+              "DOM_features": {
+                "n_char": 23,
+                "n_link": 0,
+                "n_link_char": 0,
+                "n_node": 1,
+                "n_tag": 0
+              },
+              "DOM_derive_features": {
+                "CNR": 23,
+                "LD": 0,
+                "TaD": 0
+              }
+            },
+            {
+              "type": 1,
+              "tagName": "p",
+              "DOM_features": {
+                "n_char": 42,
+                "n_link": 0,
+                "n_link_char": 0,
+                "n_node": 2,
+                "n_tag": 1,
+                "negAttrPoint": 0,
+                "posAttrPoint": 0,
+                "negTagPoint": 0,
+                "posTagPoint": 0
+              },
+              "DOM_derive_features": {
+                "CNR": 21.0,
+                "DS": 0,
+                "LD": 0.0,
+                "TaD": 0.023255813953488372,
+                "TD": 42.0
+              },
+              "CSS_features": {
+                "backgroundColor": [
+                  197.6,
+                  151.2,
+                  161.0,
+                  1.0
+                ],
+                "borderWidth": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "color": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  42,
+                  0,
+                  0
+                ],
+                "display": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fontFamily": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fontSize": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  42,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "height": 18,
+                "lineHeight": 1.2,
+                "margin": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "padding": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "position": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "width": 271,
+                "zIndex": 0
+              },
+              "CSS_derive_features": {
+                "area": 4878,
+                "bottom": 1963.6000003814697,
+                "right": 1252,
+                "show": 1,
+                "x": 0,
+                "y": 28.399999618530273
+              },
+              "children": [
+                {
+                  "type": 2,
+                  "strValue": " paragraph has been changed by JavaScript.",
+                  "DOM_features": {
+                    "n_char": 42,
+                    "n_link": 0,
+                    "n_link_char": 0,
+                    "n_node": 1,
+                    "n_tag": 0
+                  },
+                  "DOM_derive_features": {
+                    "CNR": 42,
+                    "LD": 0,
+                    "TaD": 0
+                  }
+                }
+              ]
+            },
+            {
+              "type": 2,
+              "strValue": " after the paragraph. ",
+              "DOM_features": {
+                "n_char": 22,
+                "n_link": 0,
+                "n_link_char": 0,
+                "n_node": 1,
+                "n_tag": 0
+              },
+              "DOM_derive_features": {
+                "CNR": 22,
+                "LD": 0,
+                "TaD": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
